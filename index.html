@@ -20,8 +20,8 @@
         .info-box, .contact-box, .instruction-box, .indicator-box, .question-card, .controls-container {
             border-radius: 0.75rem;
             /*box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);*/
-			background-color: #85ae5f;
-			color: #000000;
+            background-color: #85ae5f;
+            color: #000000;
         }
         .question-option {
             cursor: pointer;
@@ -51,7 +51,7 @@
             position: fixed;
             top: 20px;
             right: 20px;
-            background-color: #e0eedb;/*#f0f0f0;*/
+            background-color: #e0eedb;
             padding: 10px;
             border-radius: 5px;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
@@ -209,10 +209,9 @@
 
         <!-- Main Content -->
         <div class="md:col-span-3 space-y-6">
-            <div id="question-container" class="question-container bg-white p-6">
+            <div id="question-container" class="question-container bg-white p-6 pb-32 md:pb-6">
                 <!-- Questions will be rendered here dynamically -->
             </div>
-            
             <!-- Audio Controls Placeholder (removed basic one, integrated into floating) -->
         </div>
 
@@ -266,9 +265,8 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-
             // --- TEST DATA ---
-            const baseAudioUrl = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-"; // Placeholder audio URLs
+            const baseAudioUrl = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-";
             
             const sentenceP1 = new Array(15).fill(null).map((_, i) => ({
                 audioFile: `${baseAudioUrl}${i + 1}.mp3`,
@@ -726,7 +724,7 @@
                 if (autoContinueEnabled) {
                     const allAnsweredInGroup = globalIndicesInGroup.every(idx => userAnswers[idx]);
                     if (allAnsweredInGroup) {
-                        setTimeout(nextQuestion, 500); // Small delay for visual feedback
+                        setTimeout(nextQuestion, 500);
                     }
                 }
             }
