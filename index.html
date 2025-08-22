@@ -18,7 +18,7 @@
             max-width: 1000px;
         }
         .info-box, .contact-box, .instruction-box, .indicator-box, .question-card, .controls-container {
-            border-radius: 0.75rem;
+            border-radius: 0.2rem;
             /*box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);*/
             background-color: #85ae5f;
             color: #000000;
@@ -188,22 +188,23 @@
     <div class="container mx-auto grid grid-cols-1 md:grid-cols-4 gap-6">
 
         <!-- Left Sidebar -->
-        <div class="md:col-span-1 space-y-4">
+		<!-- Trong Tailwind, các class như text-sm, text-base, text-lg, text-xl, text-2xl, text-3xl... sẽ thay đổi cỡ chữ. -->
+        <div class="md:col-span-1 space-y-1">
             <div id="infoBox" class="info-box p-2">
-                <h3 class="text-lg font-bold mb-2" style="color: #f7e19c;">越南语能力测试</h3>
-                <h4 class="text-lg mb-2" style="color: #ffffff;">听力部分</h4>
+                <h3 class="text-3xl font-bold mb-2" style="color: #f7e19c;">习得越南语</h3>
+                <h4 class="text-lg mb-2" style="color: #ffffff;">越南语能力测试-听力部分</h4>
             </div>
-            <div id="contactBox" class="contact-box p-2">
-                <h3 class="text-lg font-bold mb-2" style="color: #f7e19c;">联系学习越南语 - 阮玉煌</h3>
-                <h4 class="text-lg mb-2" style="color: #ffffff;">Weixin：XiDeYueNanYu</h4>
+            <div id="contactBox" class="contact-box p-1 h-13">
+                <h3 class="text-sm font-bold mb-1" style="color: #f7e19c;">联系学习越南语 - 阮玉煌</h3>
+                <h4 class="text-sm mb-1" style="color: #ffffff;">Weixin：XiDeYueNanYu</h4>
             </div>
-            <div id="instructionBox" class="instruction-box p-2">
-                <h3 class="text-lg font-bold mb-2" style="color: #f7e19c;">当前位置</h3>
-                <div id="current-section" class="text-xl font-semibold text-center text-blue-600" style="color: #073763;"></div>
+            <div id="instructionBox" class="instruction-box p-1 h-13">
+                <h3 class="text-sm font-bold mb-1" style="color: #f7e19c;">当前位置</h3>
+                <div id="current-section" class="text-sm font-semibold text-center text-blue-600" style="color: #073763;"></div>
             </div>
-            <div id="indicatorBox" class="indicator-box bg-white p-3">
-                <h5 class="text-lg font-bold mb-2" style="color: #85ae5f;">未选择-已选择</h5>
-                <div id="indicator-list" class="flex flex-wrap gap-2 text-center text-sm"></div>
+            <div id="indicatorBox" class="indicator-box bg-white p-1">
+                <h5 class="text-sm font-bold mb-1" style="color: #85ae5f;">未选择-已选择</h5>
+                <div id="indicator-list" class="flex flex-wrap gap-2 text-center text-[8px]"></div>
             </div>
         </div>
 
