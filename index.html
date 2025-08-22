@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đề Thi Kỹ Năng Nghe Tiếng Việt</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            color: #333;
+            margin-bottom: 60px;
+        }
+        .container {
+            max-width: 1000px;
+        }
+        .info-box, .contact-box, .instruction-box, .indicator-box, .question-card, .controls-container {
+            border-radius: 0.75rem;
+            /*box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);*/
+			background-color: #85ae5f;
+			color: #000000;
+        }
+        .question-option {
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.2s;
+        }
+        .question-option:hover {
+            transform: translateY(-2px);
+            background-color: #f1f5f9;
+        }
+        .question-option.selected {
+            background-color: #d1d5db;
+        }
+        .controls-container {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 600px;
+            padding: 1rem;
+            background: linear-gradient(to top, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.8));
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            z-index: 1000;
+        }
+        .floating-controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #e0eedb;/*#f0f0f0;*/
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            display: block;
+            z-index: 1000;
+        }
+        #audioPlayer {
+            width: 100%;
+            margin-bottom: 5px;
+        }
+        .time-row {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .time-box-group {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        .button-group {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        .floating-controls p#timeDisplay {
+            font-size: 28px;
+            color: #FFFFFF;
+            background-color: #000000;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 0;
+        }
+        .floating-controls .time-box {
+            font-size: 16px;
+            color: #FFFFFF;
+            background-color: #555555;
+            padding: 5px 10px;
+            border-radius: 5px;
+            min-width: 60px;
+        }
+        .tua-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        .control-button {
+            width: 50px;
+            height: 50px;
+            background-color: #363535;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .control-button:disabled {
+            background-color: #888888;
+            cursor: not-allowed;
+        }
+        .control-button:hover:not(:disabled) {
+            background-color: #000000;
+        }
+        .pause-play-button {
+            background-color: #FF4500;
+        }
+        .pause-play-button:hover {
+            background-color: #CC3700;
+        }
+        .toggle-button {
+            background-color: #4682B4;
+        }
+        .toggle-button:hover {
+            background-color: #36648B;
+        }
+        .loop-button {
+            background-color: #3c923c;
+        }
+        .loop-button:hover {
+            background-color: #347d34;
+        }
+        .clear-button {
+            background-color: #bc3f13;
+        }
+        .clear-button:hover {
+            background-color: #d15124;
+        }
+        .active {
+            background-color: #ffffff; 
+            border-radius: 5px;
+        }
+        @media (max-width: 768px) { 
+            body {
+                margin-bottom: 200px;
+            }
+            .floating-controls {
+                top: 10px;
+                right: 10px;
+                padding: 5px;
+            }
+        }
+        @media (max-width: 400px) {
+            .control-button {
+                width: 40px;
+                height: 40px;
+                font-size: 14px;
+            }
+            .floating-controls p#timeDisplay {
+                font-size: 20px;
+            }
+            .floating-controls .time-box {
+                font-size: 12px;
+                min-width: 50px;
+            }
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    <div class="container mx-auto grid grid-cols-1 md:grid-cols-4 gap-6">
+
+        <!-- Left Sidebar -->
+        <div class="md:col-span-1 space-y-4">
+            <div id="infoBox" class="info-box p-2">
+                <h3 class="text-lg font-bold mb-2" style="color: #f7e19c;">越南语能力测试</h3>
+                <h4 class="text-lg mb-2" style="color: #ffffff;">听力部分</h4>
+            </div>
+            <div id="contactBox" class="contact-box p-2">
+                <h3 class="text-lg font-bold mb-2" style="color: #f7e19c;">联系学习越南语 - 阮玉煌</h3>
+                <h4 class="text-lg mb-2" style="color: #ffffff;">Weixin：XiDeYueNanYu</h4>
+            </div>
+            <div id="instructionBox" class="instruction-box p-2">
+                <h3 class="text-lg font-bold mb-2" style="color: #f7e19c;">当前位置</h3>
+                <div id="current-section" class="text-xl font-semibold text-center text-blue-600" style="color: #073763;"></div>
+            </div>
+            <div id="indicatorBox" class="indicator-box bg-white p-3">
+                <h5 class="text-lg font-bold mb-2" style="color: #85ae5f;">未选择-已选择</h5>
+                <div id="indicator-list" class="flex flex-wrap gap-2 text-center text-sm"></div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="md:col-span-3 space-y-6">
+            <div id="question-container" class="question-container bg-white p-6">
+                <!-- Questions will be rendered here dynamically -->
+            </div>
+            
+            <!-- Audio Controls Placeholder (removed basic one, integrated into floating) -->
+        </div>
+
+    </div>
+
+    <!-- Floating Controls -->
+    <div class="controls-container flex flex-col items-center justify-center space-y-4">
+        <div class="flex items-center space-x-4">
+            <label for="autoContinue" class="flex items-center text-sm cursor-pointer">
+                <input type="checkbox" id="autoContinue" class="h-4 w-4 text-green-600 rounded">
+                <span class="ml-2 text-green-700 font-medium">自动继续</span>
+            </label>
+        </div>
+        <div class="flex items-center space-x-3 w-full max-w-sm">
+            <button id="prevBtn" class="flex-grow bg-[#85ae5f] text-white py-2 px-3 rounded-[10px] font-bold shadow-md hover:bg-[#9dbe7e] transition-colors duration-200">◀
+            </button>
+            <div id="questionNumberDisplay" class="flex-shrink-0 text-center text-xl font-bold bg-[#f1cc76] text-black rounded-[10px] w-20 h-10 flex items-center justify-center shadow-lg">1</div>
+            <button id="nextBtn" class="flex-grow bg-[#85ae5f] text-white py-2 px-3 rounded-[10px] font-bold shadow-md hover:bg-[#9dbe7e] transition-colors duration-200">▶
+            </button>
+            <button id="replayBtn" class="flex-grow bg-[#85ae5f] text-white py-2 px-3 rounded-[10px] font-bold shadow-md hover:bg-[#9dbe7e] transition-colors duration-200">
+                <i class="fas fa-redo-alt mr-2"></i>再听一遍
+            </button>
+        </div>
+    </div>
+
+    <!-- Integrated Audio Floating Controls -->
+    <div class="floating-controls" id="floatingControls">
+        <audio id="audioPlayer" src="" controls></audio>
+        <div class="time-row">
+            <p id="timeDisplay">00:00</p>
+            <div class="time-box-group">
+                <span class="time-box" id="loopStart">--:--</span>
+                <span class="time-box" id="loopEnd">--:--</span>
+            </div>
+            <div class="button-group">
+                <button class="control-button loop-button" id="loopButton">听</button>
+                <button class="control-button clear-button" id="clearButton">删</button>
+            </div>
+        </div>
+        <div class="tua-buttons">
+            <button class="control-button" id="rewind5sButton">-5s</button>
+            <button class="control-button" id="rewind1sButton">-1s</button>
+            <button class="control-button" id="forward1sButton">+1s</button>
+            <button class="control-button" id="forward5sButton">+5s</button>
+        </div>
+        <div class="action-buttons">
+            <button class="control-button pause-play-button" id="pausePlayButton">播</button>
+            <button class="control-button toggle-button" id="toggleControlsButton">藏</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // --- TEST DATA ---
+            const baseAudioUrl = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-"; // Placeholder audio URLs
+            
+            const sentenceP1 = new Array(15).fill(null).map((_, i) => ({
+                audioFile: `${baseAudioUrl}${i + 1}.mp3`,
+                start: (i + 1) * 2,
+                end: (i + 1) * 2 + 1,
+                notes: "Nội dung chú ý Phần 1",
+                question: `Nội dung câu hỏi Phần 1, câu ${i + 1}`,
+                correctAnswer: "Đáp án A",
+                options: ["Đáp án A", "Đáp án B", "Đáp án C"]
+            }));
+            
+            const sentenceP2ht = new Array(2).fill(null).map((_, i) => ({
+                audioFile: `${baseAudioUrl}${16 + i}.mp3`,
+                notes: "Nội dung chú ý Hội thoại Phần 2",
+                question: `Nội dung câu hỏi Hội thoại, câu ${16 + i}`,
+                correctAnswer: "Đáp án A",
+                options: ["Đáp án A", "Đáp án B", "Đáp án C", "Đáp án D"]
+            }));
+            
+            const sentenceP2mt = new Array(4).fill(null).map((_, i) => ({
+                audioFile: `${baseAudioUrl}${18 + i}.mp3`,
+                notes: "Nội dung chú ý Mô tả tình huống Phần 2",
+                question: `Nội dung câu hỏi Mô tả tình huống, câu ${18 + i}`,
+                correctAnswer: "Đáp án A",
+                options: ["Đáp án A", "Đáp án B", "Đáp án C", "Đáp án D"]
+            }));
+            
+            const sentenceP2bn = new Array(4).fill(null).flatMap((_, i) => ([
+                {
+                    audioFile: `${baseAudioUrl}${22 + i}.mp3`,
+                    notes: "Nội dung chú ý Bài nghe ngắn Phần 2",
+                    question: `Nội dung câu hỏi Bài nghe ngắn, câu ${22 + (i*2)}`,
+                    correctAnswer: "Đáp án A",
+                    options: ["Đáp án A", "Đáp án B", "Đáp án C", "Đáp án D"]
+                },
+                {
+                    audioFile: `${baseAudioUrl}${22 + i}.mp3`,
+                    notes: "Nội dung chú ý Bài nghe ngắn Phần 2",
+                    question: `Nội dung câu hỏi Bài nghe ngắn, câu ${22 + (i*2) + 1}`,
+                    correctAnswer: "Đáp án A",
+                    options: ["Đáp án A", "Đáp án B", "Đáp án C", "Đáp án D"]
+                }
+            ]));
+
+            const sentenceP3ht = new Array(3).fill(null).flatMap((_, i) => ([
+                {
+                    audioFile: `${baseAudioUrl}${30 + i}.mp3`,
+                    notes: "Nội dung chú ý Hội thoại Phần 3",
+                    question: `Nội dung câu hỏi Hội thoại, câu ${30 + (i*2)}`,
+                    correctAnswer: "Đáp án A",
+                    options: ["Đáp án A", "Đáp án B", "Đáp án C", "Đáp án D"]
+                },
+                {
+                    audioFile: `${baseAudioUrl}${30 + i}.mp3`,
+                    notes: "Nội dung chú ý Hội thoại Phần 3",
+                    question: `Nội dung câu hỏi Hội thoại, câu ${30 + (i*2) + 1}`,
+                    correctAnswer: "Đáp án A",
+                    options: ["Đáp án A", "Đáp án B", "Đáp án C", "Đáp án D"]
+                }
+            ]));
+
+            const sentenceP3bn = new Array(4).fill(null).flatMap((_, i) => ([
+                {
+                    audioFile: `${baseAudioUrl}${36 + i}.mp3`,
+                    notes: "Nội dung chú ý Bài nghe Phần 3",
+                    question: `Nội dung câu hỏi Bài nghe, câu ${36 + (i*2)}`,
+                    correctAnswer: "Đáp án A",
+                    options: ["Đáp án A", "Đáp án B", "Đáp án C", "Đáp án D"]
+                },
+                {
+                    audioFile: `${baseAudioUrl}${36 + i}.mp3`,
+                    notes: "Nội dung chú ý Bài nghe Phần 3",
+                    question: `Nội dung câu hỏi Bài nghe, câu ${36 + (i*2) + 1}`,
+                    correctAnswer: "Đáp án A",
+                    options: ["Đáp án A", "Đáp án B", "Đáp án C", "Đáp án D"]
+                }
+            ]));
+
+            const sentenceP4 = new Array(6).fill(null).flatMap((_, i) => ([
+                {
+                    audioFile: `${baseAudioUrl}${44 + i}.mp3`,
+                    notes: "Nội dung chú ý Phần 4",
+                    question: `Nội dung câu hỏi Phần 4, câu ${44 + (i*2)}`,
+                    correctAnswer: "Đáp án A",
+                    options: ["Đáp án A", "Đáp án B", "Đáp án C", "Đáp án D"]
+                },
+                {
+                    audioFile: `${baseAudioUrl}${44 + i}.mp3`,
+                    notes: "Nội dung chú ý Phần 4",
+                    question: `Nội dung câu hỏi Phần 4, câu ${44 + (i*2) + 1}`,
+                    correctAnswer: "Đáp án A",
+                    options: ["Đáp án A", "Đáp án B", "Đáp án C", "Đáp án D"]
+                }
+            ]));
+            
+            // --- COMBINED DATA AND STATE MANAGEMENT ---
+            const allQuestions = [
+                ...sentenceP1,
+                ...sentenceP2ht,
+                ...sentenceP2mt,
+                ...sentenceP2bn,
+                ...sentenceP3ht,
+                ...sentenceP3bn,
+                ...sentenceP4
+            ];
+            const questionGroups = [];
+            let currentGlobalIndex = 1;
+            
+            // Group Part 1 questions (1 question per audio)
+            for (let i = 0; i < sentenceP1.length; i++) {
+                questionGroups.push({
+                    questions: [allQuestions[currentGlobalIndex - 1]],
+                    startQuestion: currentGlobalIndex,
+                    endQuestion: currentGlobalIndex,
+                    part: 1
+                });
+                currentGlobalIndex++;
+            }
+
+            // Group Part 2 questions
+            // P2ht (2 questions, 1 per audio)
+            for (let i = 0; i < sentenceP2ht.length; i++) {
+                questionGroups.push({
+                    questions: [allQuestions[currentGlobalIndex - 1]],
+                    startQuestion: currentGlobalIndex,
+                    endQuestion: currentGlobalIndex,
+                    part: 2
+                });
+                currentGlobalIndex++;
+            }
+            // P2mt (4 questions, 1 per audio)
+            for (let i = 0; i < sentenceP2mt.length; i++) {
+                questionGroups.push({
+                    questions: [allQuestions[currentGlobalIndex - 1]],
+                    startQuestion: currentGlobalIndex,
+                    endQuestion: currentGlobalIndex,
+                    part: 2
+                });
+                currentGlobalIndex++;
+            }
+            // P2bn (8 questions, 2 per audio)
+            for (let i = 0; i < sentenceP2bn.length; i += 2) {
+                questionGroups.push({
+                    questions: [allQuestions[currentGlobalIndex - 1], allQuestions[currentGlobalIndex]],
+                    startQuestion: currentGlobalIndex,
+                    endQuestion: currentGlobalIndex + 1,
+                    part: 2
+                });
+                currentGlobalIndex += 2;
+            }
+
+            // Group Part 3 questions
+            // P3ht (6 questions, 2 per audio)
+            for (let i = 0; i < sentenceP3ht.length; i += 2) {
+                questionGroups.push({
+                    questions: [allQuestions[currentGlobalIndex - 1], allQuestions[currentGlobalIndex]],
+                    startQuestion: currentGlobalIndex,
+                    endQuestion: currentGlobalIndex + 1,
+                    part: 3
+                });
+                currentGlobalIndex += 2;
+            }
+            // P3bn (8 questions, 2 per audio)
+            for (let i = 0; i < sentenceP3bn.length; i += 2) {
+                questionGroups.push({
+                    questions: [allQuestions[currentGlobalIndex - 1], allQuestions[currentGlobalIndex]],
+                    startQuestion: currentGlobalIndex,
+                    endQuestion: currentGlobalIndex + 1,
+                    part: 3
+                });
+                currentGlobalIndex += 2;
+            }
+
+            // Group Part 4 questions (12 questions, 2 per audio)
+            for (let i = 0; i < sentenceP4.length; i += 2) {
+                questionGroups.push({
+                    questions: [allQuestions[currentGlobalIndex - 1], allQuestions[currentGlobalIndex]],
+                    startQuestion: currentGlobalIndex,
+                    endQuestion: currentGlobalIndex + 1,
+                    part: 4
+                });
+                currentGlobalIndex += 2;
+            }
+            
+            // App state
+            let currentGroupIndex = 0;
+            const userAnswers = {};
+            let autoContinueEnabled = false;
+
+            // --- UI ELEMENTS ---
+            const questionContainer = document.getElementById('question-container');
+            const audioPlayer = document.getElementById('audioPlayer');
+            const instructionBox = document.getElementById('current-section');
+            const indicatorList = document.getElementById('indicator-list');
+            const questionNumberDisplay = document.getElementById('questionNumberDisplay');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const replayBtn = document.getElementById('replayBtn');
+            const autoContinueCheckbox = document.getElementById('autoContinue');
+
+            // Audio Controls Elements
+            const timeDisplay = document.getElementById("timeDisplay");
+            const loopStartEl = document.getElementById("loopStart");
+            const loopEndEl = document.getElementById("loopEnd");
+            const loopButton = document.getElementById("loopButton");
+            const clearButton = document.getElementById("clearButton");
+            const rewind5sButton = document.getElementById("rewind5sButton");
+            const rewind1sButton = document.getElementById("rewind1sButton");
+            const forward1sButton = document.getElementById("forward1sButton");
+            const forward5sButton = document.getElementById("forward5sButton");
+            const pausePlayButton = document.getElementById("pausePlayButton");
+            const toggleControlsButton = document.getElementById("toggleControlsButton");
+            const tuaButtons = document.querySelector(".tua-buttons");
+
+            // Audio Control Variables
+            let customLoopStart = null;
+            let customLoopEnd = null;
+            let clickCount = 0;
+            let isLooping = false;
+            let controlsVisible = true;
+
+            function formatTime(seconds) {
+                const minutes = Math.floor(seconds / 60);
+                const secs = Math.floor(seconds % 60);
+                return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            }
+
+            function updateTimeDisplay() {
+                timeDisplay.textContent = formatTime(audioPlayer.currentTime);
+            }
+
+            // Set up audio event listeners
+            const updateInterval = setInterval(updateTimeDisplay, 1000);
+
+            timeDisplay.onclick = () => {
+                if (audioPlayer.paused) {
+                    clickCount++;
+                    if (clickCount === 1) {
+                        customLoopStart = audioPlayer.currentTime;
+                        loopStartEl.textContent = formatTime(customLoopStart);
+                    } else if (clickCount === 2) {
+                        customLoopEnd = audioPlayer.currentTime;
+                        if (customLoopEnd <= customLoopStart) {
+                            customLoopEnd = null;
+                            loopEndEl.textContent = "--:--";
+                        } else {
+                            loopEndEl.textContent = formatTime(customLoopEnd);
+                        }
+                        clickCount = 0;
+                    }
+                }
+            };
+
+            audioPlayer.ontimeupdate = function() {
+                updateTimeDisplay();
+                if (isLooping && customLoopStart !== null && customLoopEnd !== null) {
+                    if (audioPlayer.currentTime >= customLoopEnd) {
+                        audioPlayer.currentTime = customLoopStart;
+                    }
+                }
+            };
+
+            rewind5sButton.onclick = () => {
+                if (!isLooping) {
+                    audioPlayer.currentTime = Math.max(0, audioPlayer.currentTime - 5);
+                    updateTimeDisplay();
+                }
+            };
+            rewind1sButton.onclick = () => {
+                if (!isLooping) {
+                    audioPlayer.currentTime = Math.max(0, audioPlayer.currentTime - 1);
+                    updateTimeDisplay();
+                }
+            };
+            forward1sButton.onclick = () => {
+                if (!isLooping) {
+                    audioPlayer.currentTime = Math.min(audioPlayer.duration, audioPlayer.currentTime + 1);
+                    updateTimeDisplay();
+                }
+            };
+            forward5sButton.onclick = () => {
+                if (!isLooping) {
+                    audioPlayer.currentTime = Math.min(audioPlayer.duration, audioPlayer.currentTime + 5);
+                    updateTimeDisplay();
+                }
+            };
+
+            pausePlayButton.onclick = () => {
+                if (audioPlayer.paused) {
+                    audioPlayer.play();
+                    pausePlayButton.textContent = "停";
+                } else {
+                    audioPlayer.pause();
+                    pausePlayButton.textContent = "播";
+                }
+            };
+
+            loopButton.onclick = () => {
+                if (customLoopStart !== null && customLoopEnd !== null) {
+                    audioPlayer.currentTime = customLoopStart;
+                    audioPlayer.play();
+                    isLooping = true;
+                    rewind5sButton.disabled = true;
+                    rewind1sButton.disabled = true;
+                    forward1sButton.disabled = true;
+                    forward5sButton.disabled = true;
+                }
+            };
+
+            clearButton.onclick = () => {
+                customLoopStart = null;
+                customLoopEnd = null;
+                loopStartEl.textContent = "--:--";
+                loopEndEl.textContent = "--:--";
+                clickCount = 0;
+                isLooping = false;
+                rewind5sButton.disabled = false;
+                rewind1sButton.disabled = false;
+                forward1sButton.disabled = false;
+                forward5sButton.disabled = false;
+            };
+
+            toggleControlsButton.onclick = () => {
+                if (controlsVisible) {
+                    timeDisplay.style.display = "none";
+                    tuaButtons.style.display = "none";
+                    pausePlayButton.style.display = "none";
+                    loopStartEl.style.display = "none";
+                    loopEndEl.style.display = "none";
+                    loopButton.style.display = "none";
+                    clearButton.style.display = "none";
+                    toggleControlsButton.textContent = "示";
+                    controlsVisible = false;
+                } else {
+                    timeDisplay.style.display = "inline-block";
+                    tuaButtons.style.display = "flex";
+                    pausePlayButton.style.display = "inline-flex";
+                    loopStartEl.style.display = "inline-block";
+                    loopEndEl.style.display = "inline-block";
+                    loopButton.style.display = "inline-flex";
+                    clearButton.style.display = "inline-flex";
+                    toggleControlsButton.textContent = "藏";
+                    controlsVisible = true;
+                }
+            };
+
+            audioPlayer.onpause = audioPlayer.onended = function() {
+                pausePlayButton.textContent = "播";
+            };
+
+            // --- CORE FUNCTIONS ---
+            function renderQuestionGroup() {
+                if (currentGroupIndex >= questionGroups.length) {
+                    showResult();
+                    return;
+                }
+                
+                const group = questionGroups[currentGroupIndex];
+                const start = group.startQuestion;
+                const end = group.endQuestion;
+
+                // Update instruction box
+                let questionNumberText = (start === end) ? `${start}` : `${start}-${end}`;
+                instructionBox.textContent = `Phần ${group.part} - Câu ${questionNumberText}`;
+                questionNumberDisplay.textContent = questionNumberText;
+                
+                // Render questions
+                questionContainer.innerHTML = '';
+                group.questions.forEach((q, i) => {
+                    const globalIndex = start + i;
+                    const questionCard = document.createElement('div');
+                    questionCard.classList.add('question-card', 'bg-gray-50', 'p-6', 'rounded-xl', 'shadow-sm', 'mb-4');
+                    questionCard.innerHTML = `
+                        <p class="text-sm text-gray-500 italic mb-2">Chú ý: ${q.notes}</p>
+                        <h4 class="text-lg font-bold mb-4">Câu ${globalIndex}: ${q.question}</h4>
+                        <div id="options-${globalIndex}" class="space-y-3"></div>
+                    `;
+                    questionContainer.appendChild(questionCard);
+
+                    const optionsContainer = document.getElementById(`options-${globalIndex}`);
+                    q.options.forEach(option => {
+                        const optionElement = document.createElement('div');
+                        optionElement.classList.add('question-option', 'p-3', 'bg-white', 'rounded-lg', 'border', 'border-gray-200', 'hover:border-blue-400');
+                        optionElement.textContent = option;
+                        optionsContainer.appendChild(optionElement);
+
+                        // Set selected state if already answered
+                        if (userAnswers[globalIndex] && userAnswers[globalIndex].selectedOption === option) {
+                            optionElement.classList.add('selected');
+                        }
+
+                        // Add click event listener
+                        optionElement.addEventListener('click', () => {
+                            handleAnswer(globalIndex, option);
+                        });
+                    });
+                });
+
+                // Play audio and set loop points automatically for the segment
+                const questionData = group.questions[0];
+                customLoopStart = questionData.start;
+                customLoopEnd = questionData.end;
+                loopStartEl.textContent = formatTime(customLoopStart);
+                loopEndEl.textContent = formatTime(customLoopEnd);
+                playAudio(questionData);
+                updateUI();
+            }
+
+            function playAudio(questionData) {
+                const audioFile = questionData.audioFile;
+                const start = customLoopStart || questionData.start;
+                const end = customLoopEnd || questionData.end;
+
+                audioPlayer.src = audioFile;
+                audioPlayer.currentTime = start;
+                audioPlayer.play();
+                
+                const stopPlayback = () => {
+                    if (audioPlayer.currentTime >= end) {
+                        audioPlayer.pause();
+                        audioPlayer.removeEventListener('timeupdate', stopPlayback);
+                    }
+                };
+                audioPlayer.addEventListener('timeupdate', stopPlayback);
+            }
+
+            function handleAnswer(questionIndex, selectedOption) {
+                const group = questionGroups[currentGroupIndex];
+                const globalIndicesInGroup = group.questions.map((_, i) => group.startQuestion + i);
+                
+                // Check if all questions in the group are answered
+                const allAnswered = globalIndicesInGroup.every(idx => userAnswers[idx]);
+                
+                // Store the answer
+                userAnswers[questionIndex] = {
+                    selectedOption: selectedOption,
+                    correctAnswer: allQuestions[questionIndex - 1].correctAnswer
+                };
+
+                // Update UI for the answered question
+                const optionsContainer = document.getElementById(`options-${questionIndex}`);
+                if (optionsContainer) {
+                    Array.from(optionsContainer.children).forEach(optionEl => {
+                        optionEl.classList.remove('selected');
+                    });
+                    const selectedEl = Array.from(optionsContainer.children).find(el => el.textContent === selectedOption);
+                    if (selectedEl) {
+                        selectedEl.classList.add('selected');
+                    }
+                }
+                
+                updateUI();
+
+                // If auto-continue is on and all questions in the group are answered, move to the next group
+                if (autoContinueEnabled) {
+                    const allAnsweredInGroup = globalIndicesInGroup.every(idx => userAnswers[idx]);
+                    if (allAnsweredInGroup) {
+                        setTimeout(nextQuestion, 500); // Small delay for visual feedback
+                    }
+                }
+            }
+
+            function updateUI() {
+                // Update indicator box
+                indicatorList.innerHTML = '';
+                const allQuestionNumbers = Array.from({length: allQuestions.length}, (_, i) => i + 1);
+                
+                allQuestionNumbers.forEach(num => {
+                    const isAnswered = userAnswers[num] !== undefined;
+                    const indicatorItem = document.createElement('span');
+                    indicatorItem.textContent = num;
+                    indicatorItem.classList.add('py-1', 'px-2', 'rounded-full', 'font-semibold', 'transition-colors', 'duration-200');
+                    if (isAnswered) {
+                        indicatorItem.classList.add('bg-green-200', 'text-green-800');
+                    } else {
+                        indicatorItem.classList.add('bg-red-200', 'text-red-800');
+                    }
+                    indicatorList.appendChild(indicatorItem);
+                });
+            }
+
+            function nextQuestion() {
+                if (currentGroupIndex < questionGroups.length - 1) {
+                    currentGroupIndex++;
+                    renderQuestionGroup();
+                } else {
+                    showResult();
+                }
+            }
+
+            function prevQuestion() {
+                if (currentGroupIndex > 0) {
+                    currentGroupIndex--;
+                    renderQuestionGroup();
+                }
+            }
+            
+            function showResult() {
+                const totalQuestions = allQuestions.length;
+                let correctAnswers = 0;
+
+                for (let i = 1; i <= totalQuestions; i++) {
+                    const userAnswer = userAnswers[i];
+                    if (userAnswer && userAnswer.selectedOption === userAnswer.correctAnswer) {
+                        correctAnswers++;
+                    }
+                }
+                
+                questionContainer.innerHTML = `
+                    <div class="result-container text-center p-8 bg-blue-50 rounded-xl shadow-lg">
+                        <h2 class="text-3xl font-bold text-blue-800 mb-4">Kết quả bài thi</h2>
+                        <p class="text-xl text-gray-700 mb-2">Bạn đã hoàn thành bài thi.</p>
+                        <p class="text-2xl font-extrabold text-blue-600">Bạn trả lời đúng ${correctAnswers} trên tổng số ${totalQuestions} câu.</p>
+                        <div class="mt-8 text-left space-y-4">
+                            <h3 class="text-xl font-bold">Báo cáo chi tiết</h3>
+                            <div id="detailed-report" class="space-y-2"></div>
+                        </div>
+                    </div>
+                `;
+                
+                const detailedReport = document.getElementById('detailed-report');
+                for (let i = 1; i <= totalQuestions; i++) {
+                    const questionData = allQuestions[i - 1];
+                    const userAnswer = userAnswers[i];
+                    const isCorrect = userAnswer && userAnswer.selectedOption === questionData.correctAnswer;
+                    const resultText = isCorrect ? "Đúng" : "Sai";
+                    const resultColor = isCorrect ? "text-green-600" : "text-red-600";
+
+                    const reportItem = document.createElement('div');
+                    reportItem.classList.add('p-3', 'bg-white', 'rounded-md', 'shadow-sm');
+                    reportItem.innerHTML = `
+                        <p class="font-semibold">Câu ${i}:</p>
+                        <p class="ml-4">Đáp án của bạn: <strong>${userAnswer ? userAnswer.selectedOption : "Chưa trả lời"}</strong></p>
+                        <p class="ml-4">Đáp án đúng: <strong>${questionData.correctAnswer}</strong></p>
+                        <p class="ml-4 ${resultColor}">Kết quả: <strong>${resultText}</strong></p>
+                    `;
+                    detailedReport.appendChild(reportItem);
+                }
+                
+                // Hide floating controls
+                document.querySelector('.controls-container').style.display = 'none';
+                document.getElementById('floatingControls').style.display = 'none';
+            }
+
+            // --- EVENT LISTENERS ---
+            prevBtn.addEventListener('click', prevQuestion);
+            nextBtn.addEventListener('click', nextQuestion);
+            replayBtn.addEventListener('click', () => {
+                const currentGroup = questionGroups[currentGroupIndex];
+                playAudio(currentGroup.questions[0]);
+            });
+            autoContinueCheckbox.addEventListener('change', (e) => {
+                autoContinueEnabled = e.target.checked;
+            });
+
+            // Initial render
+            renderQuestionGroup();
+        });
+    </script>
+</body>
+</html>
