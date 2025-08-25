@@ -19,7 +19,6 @@
         }
         .info-box, .contact-box, .instruction-box, .indicator-box, .question-card, .controls-container {
             border-radius: 0.2rem;
-            /*box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);*/
             background-color: #85ae5f;
             color: #000000;
         }
@@ -158,6 +157,22 @@
             background-color: #ffffff; 
             border-radius: 5px;
         }
+        .indicator-item {
+            cursor: pointer;
+        }
+        .indicator-item:hover {
+            background-color: #e5e7eb;
+        }
+        #questionNumberDisplay {
+            cursor: pointer;
+        }
+        #questionNumberInput {
+            width: 60px;
+            text-align: center;
+            border: 1px solid #d1d5db;
+            border-radius: 5px;
+            padding: 2px;
+        }
         @media (max-width: 768px) { 
             body {
                 margin-bottom: 200px;
@@ -188,7 +203,6 @@
     <div class="container mx-auto grid grid-cols-1 md:grid-cols-4 gap-6">
 
         <!-- Left Sidebar -->
-		<!-- Trong Tailwind, các class như text-sm, text-base, text-lg, text-xl, text-2xl, text-3xl... sẽ thay đổi cỡ chữ. -->
         <div class="md:col-span-1 space-y-1">
             <div id="infoBox" class="info-box p-2">
                 <h3 class="text-3xl font-bold mb-2" style="color: #f7e19c;">习得越南语</h3>
@@ -213,7 +227,6 @@
             <div id="question-container" class="question-container bg-white p-6 pb-32 md:pb-6">
                 <!-- Questions will be rendered here dynamically -->
             </div>
-            <!-- Audio Controls Placeholder (removed basic one, integrated into floating) -->
         </div>
 
     </div>
@@ -229,7 +242,7 @@
         <div class="flex items-center space-x-3 w-full max-w-sm">
             <button id="prevBtn" class="flex-grow bg-[#85ae5f] text-white py-2 px-3 rounded-[10px] font-bold shadow-md hover:bg-[#9dbe7e] transition-colors duration-200">◀
             </button>
-            <div id="questionNumberDisplay" class="flex-shrink-0 text-center text-xl font-bold bg-[#f1cc76] text-black rounded-[10px] w-20 h-10 flex items-center justify-center shadow-lg">1</div>
+            <input id="questionNumberInput" type="number" min="1" class="flex-shrink-0 text-center text-xl font-bold bg-[#f1cc76] text-black rounded-[10px] w-20 h-10 flex items-center justify-center shadow-lg">
             <button id="nextBtn" class="flex-grow bg-[#85ae5f] text-white py-2 px-3 rounded-[10px] font-bold shadow-md hover:bg-[#9dbe7e] transition-colors duration-200">▶
             </button>
             <button id="replayBtn" class="flex-grow bg-[#85ae5f] text-white py-2 px-3 rounded-[10px] font-bold shadow-md hover:bg-[#9dbe7e] transition-colors duration-200">
@@ -462,7 +475,7 @@
             const audioPlayer = document.getElementById('audioPlayer');
             const instructionBox = document.getElementById('current-section');
             const indicatorList = document.getElementById('indicator-list');
-            const questionNumberDisplay = document.getElementById('questionNumberDisplay');
+            const questionNumberInput = document.getElementById('questionNumberInput');
             const prevBtn = document.getElementById('prevBtn');
             const nextBtn = document.getElementById('nextBtn');
             const replayBtn = document.getElementById('replayBtn');
@@ -632,7 +645,7 @@
                 // Update instruction box
                 let questionNumberText = (start === end) ? `${start}` : `${start}-${end}`;
                 instructionBox.textContent = `Phần ${group.part} - Câu ${questionNumberText}`;
-                questionNumberDisplay.textContent = questionNumberText;
+                questionNumberInput.value = start;
                 
                 // Render questions
                 questionContainer.innerHTML = '';
@@ -698,9 +711,6 @@
                 const group = questionGroups[currentGroupIndex];
                 const globalIndicesInGroup = group.questions.map((_, i) => group.startQuestion + i);
                 
-                // Check if all questions in the group are answered
-                const allAnswered = globalIndicesInGroup.every(idx => userAnswers[idx]);
-                
                 // Store the answer
                 userAnswers[questionIndex] = {
                     selectedOption: selectedOption,
@@ -730,6 +740,16 @@
                 }
             }
 
+            function jumpToQuestion(questionNumber) {
+                const targetIndex = questionGroups.findIndex(group => 
+                    questionNumber >= group.startQuestion && questionNumber <= group.endQuestion
+                );
+                if (targetIndex !== -1 && targetIndex !== currentGroupIndex) {
+                    currentGroupIndex = targetIndex;
+                    renderQuestionGroup();
+                }
+            }
+
             function updateUI() {
                 // Update indicator box
                 indicatorList.innerHTML = '';
@@ -739,12 +759,15 @@
                     const isAnswered = userAnswers[num] !== undefined;
                     const indicatorItem = document.createElement('span');
                     indicatorItem.textContent = num;
-                    indicatorItem.classList.add('py-1', 'px-2', 'rounded-full', 'font-semibold', 'transition-colors', 'duration-200');
+                    indicatorItem.classList.add('indicator-item', 'py-1', 'px-2', 'rounded-full', 'font-semibold', 'transition-colors', 'duration-200');
                     if (isAnswered) {
                         indicatorItem.classList.add('bg-green-200', 'text-green-800');
                     } else {
                         indicatorItem.classList.add('bg-red-200', 'text-red-800');
                     }
+                    indicatorItem.addEventListener('click', () => {
+                        jumpToQuestion(num);
+                    });
                     indicatorList.appendChild(indicatorItem);
                 });
             }
@@ -821,6 +844,15 @@
             });
             autoContinueCheckbox.addEventListener('change', (e) => {
                 autoContinueEnabled = e.target.checked;
+            });
+            questionNumberInput.addEventListener('change', (e) => {
+                const questionNumber = parseInt(e.target.value);
+                if (questionNumber >= 1 && questionNumber <= allQuestions.length) {
+                    jumpToQuestion(questionNumber);
+                } else {
+                    // Reset to current group start if invalid
+                    e.target.value = questionGroups[currentGroupIndex].startQuestion;
+                }
             });
 
             // Initial render
