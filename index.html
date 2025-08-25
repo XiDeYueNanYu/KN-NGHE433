@@ -122,40 +122,38 @@
             justify-content: center;
             align-items: center;
         }
-        .control-button:disabled {
+        .control-button:disabled,
+        .control-button.disabled {
             background-color: #888888;
             cursor: not-allowed;
+            display: none;
         }
-        .control-button:hover:not(:disabled) {
+        .control-button:hover:not(:disabled):not(.disabled) {
             background-color: #000000;
         }
         .pause-play-button {
             background-color: #FF4500;
         }
-        .pause-play-button:hover {
+        .pause-play-button:hover:not(:disabled):not(.disabled) {
             background-color: #CC3700;
         }
         .toggle-button {
             background-color: #4682B4;
         }
-        .toggle-button:hover {
+        .toggle-button:hover:not(:disabled):not(.disabled) {
             background-color: #36648B;
         }
         .loop-button {
             background-color: #3c923c;
         }
-        .loop-button:hover {
+        .loop-button:hover:not(:disabled):not(.disabled) {
             background-color: #347d34;
         }
         .clear-button {
             background-color: #bc3f13;
         }
-        .clear-button:hover {
+        .clear-button:hover:not(:disabled):not(.disabled) {
             background-color: #d15124;
-        }
-        .active {
-            background-color: #ffffff; 
-            border-radius: 5px;
         }
         .indicator-item {
             cursor: pointer;
@@ -163,15 +161,9 @@
         .indicator-item:hover {
             background-color: #e5e7eb;
         }
-        #questionNumberDisplay {
-            cursor: pointer;
-        }
-        #questionNumberInput {
-            width: 60px;
-            text-align: center;
-            border: 1px solid #d1d5db;
-            border-radius: 5px;
-            padding: 2px;
+        .indicator-item.active {
+            background-color: #fef3c7;
+            border: 2px solid #f59e0b;
         }
         @media (max-width: 768px) { 
             body {
@@ -197,11 +189,14 @@
                 min-width: 50px;
             }
         }
+        .highlighted {
+            background-color: #fef3c7;
+            border: 2px solid #f59e0b;
+        }
     </style>
 </head>
 <body class="p-4 md:p-8">
     <div class="container mx-auto grid grid-cols-1 md:grid-cols-4 gap-6">
-
         <!-- Left Sidebar -->
         <div class="md:col-span-1 space-y-1">
             <div id="infoBox" class="info-box p-2">
@@ -228,7 +223,6 @@
                 <!-- Questions will be rendered here dynamically -->
             </div>
         </div>
-
     </div>
 
     <!-- Floating Controls -->
@@ -242,7 +236,7 @@
         <div class="flex items-center space-x-3 w-full max-w-sm">
             <button id="prevBtn" class="flex-grow bg-[#85ae5f] text-white py-2 px-3 rounded-[10px] font-bold shadow-md hover:bg-[#9dbe7e] transition-colors duration-200">◀
             </button>
-            <input id="questionNumberInput" type="number" min="1" class="flex-shrink-0 text-center text-xl font-bold bg-[#f1cc76] text-black rounded-[10px] w-20 h-10 flex items-center justify-center shadow-lg">
+            <div id="questionNumberDisplay" class="flex-shrink-0 text-center text-xl font-bold bg-[#f1cc76] text-black rounded-[10px] w-20 h-10 flex items-center justify-center shadow-lg">1</div>
             <button id="nextBtn" class="flex-grow bg-[#85ae5f] text-white py-2 px-3 rounded-[10px] font-bold shadow-md hover:bg-[#9dbe7e] transition-colors duration-200">▶
             </button>
             <button id="replayBtn" class="flex-grow bg-[#85ae5f] text-white py-2 px-3 rounded-[10px] font-bold shadow-md hover:bg-[#9dbe7e] transition-colors duration-200">
@@ -279,103 +273,705 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // --- TEST DATA ---
+            // --- ARRAY DECLARATIONS ---
+            // Paste your array declarations (sentenceP1, sentenceP2ht, sentenceP2mt, sentenceP2bn, sentenceP3ht, sentenceP3bn, sentenceP4) here
             const baseAudioUrl = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-";
+            // --- END ARRAY DECLARATIONS ---
+            const sentenceP1 = [
+    {
+        "audioFile": "sentenceP1.mp3",
+        "start": 0.43102,
+        "end": 1.75102,
+        "notes": "Nghe và chọn đáp án đúng.",
+        "question": "Người nghe sẽ trả lời thế nào?",
+        "correctAnswer": "Tôi tên là Hoa.",
+        "options": [
+            "Tôi tên là Hoa.",
+            "Chị ấy tên là Hoa.",
+            "Chị Hoa đấy."
+        ]
+    },
+    {
+        "audioFile": "sentenceP1.mp3",
+        "start": 2.23102,
+        "end": 3.83102,
+        "notes": "Nghe và chọn đáp án đúng.",
+        "question": "Người nghe sẽ trả lời thế nào?",
+        "correctAnswer": "Tôi là người Pháp.",
+        "options": [
+            "Tôi là người Pháp.",
+            "Tớ đến từ Pháp.",
+            "Anh ấy mang quốc tịch Pháp."
+        ]
+    },
+    {
+        "audioFile": "sentenceP1.mp3",
+        "start": 4.37102,
+        "end": 6.37102,
+        "notes": "Nghe và chọn đáp án đúng.",
+        "question": "Người nghe sẽ trả lời thế nào?",
+        "correctAnswer": "Có, Bà ấy biết một chút tiếng Việt.",
+        "options": [
+            "Không, bà ấy học tiếng Việt được một chút.",
+            "Bà học tiếng Việt cách đây hai tháng rồi.",
+            "Có, Bà ấy biết một chút tiếng Việt."
+        ]
+    },
+    {
+        "audioFile": "sentenceP1.mp3",
+        "start": 6.90102,
+        "end": 8.61102,
+        "notes": "Nghe và chọn đáp án đúng.",
+        "question": "Người nghe sẽ trả lời thế nào?",
+        "correctAnswer": "Hôm qua là thứ sáu.",
+        "options": [
+            "Ngày qua là thứ bảy.",
+            "Hôm qua là ngày 20.",
+            "Hôm qua là thứ sáu."
+        ]
+    },
+    {
+        "audioFile": "sentenceP1.mp3",
+        "start": 9.23102,
+        "end": 11.56102,
+        "notes": "Nghe và chọn đáp án đúng.",
+        "question": "Người nghe sẽ trả lời thế nào?",
+        "correctAnswer": "Em là sinh viên năm thứ tư ạ!",
+        "options": [
+            "Em là sinh viên năm thứ bốn ạ!",
+            "Em là sinh viên năm thứ tư ạ!",
+            "Em sinh năm 94."
+        ]
+    },
+    {
+        "audioFile": "sentenceP1.mp3",
+        "start": 12.05102,
+        "end": 13.55102,
+        "notes": "Nghe và chọn đáp án đúng.",
+        "question": "Người nghe sẽ trả lời thế nào?",
+        "correctAnswer": "Ông ấy đang ngủ.",
+        "options": [
+            "Ông khỏi rồi.",
+            "Ông ấy đỡ rồi.",
+            "Ông ấy đang ngủ."
+        ]
+    },
+    {
+        "audioFile": "sentenceP1.mp3",
+        "start": 14.11102,
+        "end": 18.15102,
+        "notes": "Nghe và chọn đáp án đúng.",
+        "question": "Người nghe sẽ trả lời thế nào?",
+        "correctAnswer": "Khoảng 1 cây số chị ạ!",
+        "options": [
+            "Không xa lắm đâu!",
+            "Khoảng 1 cây số chị ạ!",
+            "Chị cứ đi thẳng là tới thôi!"
+        ]
+    },
+    {
+        "audioFile": "sentenceP1.mp3",
+        "start": 18.59102,
+        "end": 19.90102,
+        "notes": "Nghe và chọn đáp án đúng.",
+        "question": "Phát ngôn trên có mấy loại thanh điệu?",
+        "correctAnswer": "Ba",
+        "options": [
+            "Một",
+            "Hai",
+            "Ba"
+        ]
+    },
+    {
+        "audioFile": "sentenceP1.mp3",
+        "start": 20.35102,
+        "end": 23.71102,
+        "notes": "Nghe và chọn đáp án đúng.",
+        "question": "Phát ngôn trên có mấy loại thanh điệu?",
+        "correctAnswer": "Bốn",
+        "options": [
+            "Bốn",
+            "Năm",
+            "Sáu"
+        ]
+    },
+    {
+        "audioFile": "sentenceP1.mp3",
+        "start": 24.18102,
+        "end": 26.22102,
+        "notes": "Nghe và chọn đáp án đúng.",
+        "question": "Người nghe sẽ trả lời thế nào?",
+        "correctAnswer": "Tôi đến đây bằng xe máy.",
+        "options": [
+            "Tôi đi làm bằng ô tô.",
+            "Tôi đến đó bằng phương tiện xe máy.",
+            "Tôi đến đây bằng xe máy."
+        ]
+    },
+    {
+        "audioFile": "sentenceP1.mp3",
+        "start": 26.77102,
+        "end": 28.86102,
+        "notes": "Nghe và chọn đáp án đúng.",
+        "question": "Phát ngôn trên có nghĩa là?",
+        "correctAnswer": "Tôi không biết chị ấy là ai.",
+        "options": [
+            "Tôi có biết chị ấy.",
+            "Tôi không quen chị ấy.",
+            "Tôi không biết chị ấy là ai."
+        ]
+    },
+    {
+        "audioFile": "sentenceP1.mp3",
+        "start": 29.35102,
+        "end": 31.25102,
+        "notes": "Nghe và chọn đáp án đúng.",
+        "question": "Phát ngôn trên là phát ngôn như thế nào?",
+        "correctAnswer": "chấp nhận miễn cưỡng.",
+        "options": [
+            "đánh giá, nhận xét về món Phở.",
+            "chấp nhận miễn cưỡng.",
+            "phê phán món Phở."
+        ]
+    },
+    {
+        "audioFile": "sentenceP1.mp3",
+        "start": 31.79102,
+        "end": 33.90102,
+        "notes": "Nghe và chọn đáp án đúng.",
+        "question": "Phát ngôn trên có nghĩa là?",
+        "correctAnswer": "Họ đã đi chơi trong nhiều tuần nay rồi.",
+        "options": [
+            "Tuần nào họ cũng đi chơi.",
+            "Họ đã đi chơi trong nhiều tuần nay rồi.",
+            "Họ sẽ đi chơi nhiều tuần vào thời gian tới."
+        ]
+    },
+    {
+        "audioFile": "sentenceP1.mp3",
+        "start": 34.52102,
+        "end": 36.84102,
+        "notes": "Nghe và chọn đáp án đúng.",
+        "question": "Phát ngôn trên có nghĩa là?",
+        "correctAnswer": "Anh ấy thôi việc rồi thì phải.",
+        "options": [
+            "Người ta bảo tôi anh ấy thôi việc rồi.",
+            "Tôi được biết là anh ấy từ chức rồi.",
+            "Anh ấy thôi việc rồi thì phải."
+        ]
+    },
+    {
+        "audioFile": "sentenceP1.mp3",
+        "start": 37.33102,
+        "end": 40.51102,
+        "notes": "Nghe và chọn đáp án đúng.",
+        "question": "Phát ngôn trên có nghĩa là?",
+        "correctAnswer": "Mình không đủ tiền mua.",
+        "options": [
+            "Mình không đủ tiền mua.",
+            "Đợi mình đủ tiền sẽ mua.",
+            "Mình có muốn mua xe đâu."
+        ]
+    }
+];
             
-            const sentenceP1 = new Array(15).fill(null).map((_, i) => ({
-                audioFile: `${baseAudioUrl}${i + 1}.mp3`,
-                start: (i + 1) * 2,
-                end: (i + 1) * 2 + 1,
-                notes: "Nội dung chú ý Phần 1",
-                question: `Nội dung câu hỏi Phần 1, câu ${i + 1}`,
-                correctAnswer: "Đáp án A",
-                options: ["Đáp án A", "Đáp án B", "Đáp án C"]
-            }));
-            
-            const sentenceP2ht = new Array(2).fill(null).map((_, i) => ({
-                audioFile: `${baseAudioUrl}${16 + i}.mp3`,
-                notes: "Nội dung chú ý Hội thoại Phần 2",
-                question: `Nội dung câu hỏi Hội thoại, câu ${16 + i}`,
-                correctAnswer: "Đáp án A",
-                options: ["Đáp án A", "Đáp án B", "Đáp án C", "Đáp án D"]
-            }));
-            
-            const sentenceP2mt = new Array(4).fill(null).map((_, i) => ({
-                audioFile: `${baseAudioUrl}${18 + i}.mp3`,
-                notes: "Nội dung chú ý Mô tả tình huống Phần 2",
-                question: `Nội dung câu hỏi Mô tả tình huống, câu ${18 + i}`,
-                correctAnswer: "Đáp án A",
-                options: ["Đáp án A", "Đáp án B", "Đáp án C", "Đáp án D"]
-            }));
-            
-            const sentenceP2bn = new Array(4).fill(null).flatMap((_, i) => ([
+            const sentenceP2ht = [
                 {
-                    audioFile: `${baseAudioUrl}${22 + i}.mp3`,
-                    notes: "Nội dung chú ý Bài nghe ngắn Phần 2",
-                    question: `Nội dung câu hỏi Bài nghe ngắn, câu ${22 + (i*2)}`,
-                    correctAnswer: "Đáp án A",
-                    options: ["Đáp án A", "Đáp án B", "Đáp án C", "Đáp án D"]
+                    "audioFile": "sentenceP2ht1.mp3",
+                    "notes": "Nghe và chọn đáp án đúng.",
+                    "question": "Hà và Nam bắt đầu tiết học lúc mấy giờ?",
+                    "correctAnswer": "7 giờ 5 phút.",
+                    "options": [
+                        "7 giờ kém 5 phút.",
+                        "7 giờ.",
+                        "7 giờ 5 phút.",
+                        "7 giờ qua phút."
+                    ]
                 },
                 {
-                    audioFile: `${baseAudioUrl}${22 + i}.mp3`,
-                    notes: "Nội dung chú ý Bài nghe ngắn Phần 2",
-                    question: `Nội dung câu hỏi Bài nghe ngắn, câu ${22 + (i*2) + 1}`,
-                    correctAnswer: "Đáp án A",
-                    options: ["Đáp án A", "Đáp án B", "Đáp án C", "Đáp án D"]
+                    "audioFile": "sentenceP2ht2.mp3",
+                    "notes": "Nghe và chọn đáp án đúng.",
+                    "question": "Nana khuyên Hà nên đi Hà Lan du lịch vào mùa nào?",
+                    "correctAnswer": "Mùa xuân.",
+                    "options": [
+                        "Mùa xuân.",
+                        "Mùa hè.",
+                        "Cả bốn mùa.",
+                        "Mùa Đông"
+                    ]
                 }
-            ]));
+            ];
+            
+            const sentenceP2mt = [
+    {
+        "audioFile": "sentenceP2mt1.mp3",
+        "notes": "Nghe và chọn đáp án đúng.",
+        "question": "(...)",
+        "correctAnswer": "Tôi cũng rất vui được gặp chị.",
+        "options": [
+            "Cám ơn chị. Tôi khỏe.",
+            "Tôi cũng rất vui được gặp chị.",
+            "Thế nào? Chị có khỏe không?",
+            "chắc chắn rồi."
+        ]
+    },
+    {
+        "audioFile": "sentenceP2mt2.mp3",
+        "notes": "Nghe và chọn đáp án đúng.",
+        "question": "(...)",
+        "correctAnswer": "Chị cứ bình tĩnh, đừng lo lắng quá.",
+        "options": [
+            "Chị nên cẩn thận.",
+            "Chị cứ bình tĩnh, đừng lo lắng quá.",
+            "Làm gì mà chị cứ cuống lên thế.",
+            "Thật là khó chịu."
+        ]
+    },
+    {
+        "audioFile": "sentenceP2mt3.mp3",
+        "notes": "Nghe và chọn đáp án đúng.",
+        "question": "(...)",
+        "correctAnswer": "Xin lỗi, cho mình đi nhờ một chút.",
+        "options": [
+            "Các bạn không được đứng ở đây.",
+            "Các bạn hãy tránh ra.",
+            "Xin lỗi, cho mình đi nhờ một chút.",
+            "Nào tránh ra cho người ta đi nào."
+        ]
+    },
+    {
+        "audioFile": "sentenceP2mt4.mp3",
+        "notes": "Nghe và chọn đáp án đúng.",
+        "question": "(...)",
+        "correctAnswer": "Cám ơn cậu.",
+        "options": [
+            "Cám ơn cậu.",
+            "Không sao.",
+            "Không có gì.",
+            "Không có vấn đề gì cả."
+        ]
+    }
+];
+            
+            const sentenceP2bn = [
+    {
+        "audioFile": "sentenceP2bn1.mp3",
+        "notes": "Nghe và chọn đáp án đúng.",
+        "question": "Nội dung chính của bài nghe nói về:",
+        "correctAnswer": "Chào hỏi và chào mời trong tiếng Việt.",
+        "options": [
+            "Chào hỏi và chào mời trong tiếng Việt.",
+            "Chào hỏi trong tiếng Việt.",
+            "Các kiểu chào và chào hỏi trong tiếng Việt.",
+            "Chào mời trong tiếng Việt."
+        ]
+    },
+    {
+        "audioFile": "sentenceP2bn1.mp3",
+        "notes": "Nghe và chọn đáp án đúng.",
+        "question": "Ngoài chào hỏi bằng lời, người Việt còn chào hỏi nhau bằng:",
+        "correctAnswer": "nụ cười, ánh mắt.",
+        "options": [
+            "hành vi, động tác.",
+            "Ánh mắt, bàn tay.",
+            "nụ cười, ánh mắt.",
+            "Ngôn ngữ cử chỉ."
+        ]
+    },
+    {
+        "audioFile": "sentenceP2bn2.mp3",
+        "notes": "Nghe và chọn đáp án đúng.",
+        "question": "Trong đoạn các bạn vừa nghe, siêu thị nằm ở đâu?",
+        "correctAnswer": "Nằm giữa hiệu thuốc và tiệm cắt tóc.",
+        "options": [
+            "Nằm ở bên phải hiệu thuốc.",
+            "Nằm ở bên trái tiệm cắt tóc.",
+            "Nằm ở giữa cửa hàng rượu và tiệm cắt tóc.",
+            "Nằm giữa hiệu thuốc và tiệm cắt tóc."
+        ]
+    },
+    {
+        "audioFile": "sentenceP2bn2.mp3",
+        "notes": "Nghe và chọn đáp án đúng.",
+        "question": "Ngã tư cách nhà ga bao xa?",
+        "correctAnswer": "Khoảng 5 phút đi bộ.",
+        "options": [
+            "Khoảng 2 km.",
+            "Khoảng 5 phút đi bộ.",
+            "Khoảng 3 km.",
+            "Khoảng 1 km."
+        ]
+    },
+    {
+        "audioFile": "sentenceP2bn3.mp3",
+        "notes": "Nghe và chọn đáp án đúng.",
+        "question": "Ý chính của đoạn các bạn vừa nghe trên là gì?",
+        "correctAnswer": "Nói về đặc trưng của thời tiết ở thị trấn Sa Pa.",
+        "options": [
+            "Nói về thời tiết ở Sa Pa.",
+            "Nói về đặc trưng của thời tiết ở thị trấn Sa Pa.",
+            "Nói về lượng mưa trung bình ở Sa Pa.",
+            "Nói về nhiệt độ ở thị trấn Sa Pa."
+        ]
+    },
+    {
+        "audioFile": "sentenceP2bn3.mp3",
+        "notes": "Nghe và chọn đáp án đúng.",
+        "question": "Vào mùa đông, thời tiết ở Sa Pa có những đặc điểm gì?",
+        "correctAnswer": "Mây mù bao phủ, lạnh, nhiệt độ thấp, đôi khi có tuyết.",
+        "options": [
+            "Lạnh, nhiệt độ thấp, đôi khi có tuyết.",
+            "Mây mù bao phủ, lạnh, nhiệt độ thấp, đôi khi có tuyết.",
+            "Lạnh, nhiệt độ có khi xuống dưới 0oC, đôi khi có tuyết.",
+            "Nhiệt độ thấp, có khi xuống dưới 0oC, đôi khi có tuyết."
+        ]
+    },
+    {
+        "audioFile": "sentenceP2bn4.mp3",
+        "notes": "Nghe và chọn đáp án đúng.",
+        "question": "Hãy cho biết, bản dự báo thời tiết trên là của ngày nào?",
+        "correctAnswer": "Sáng ngày 26 tháng 12.",
+        "options": [
+            "Sáng ngày 24 tháng 12.",
+            "Chiều, tối ngày 24 tháng 12.",
+            "Sáng ngày 25 tháng 12.",
+            "Sáng ngày 26 tháng 12."
+        ]
+    },
+    {
+        "audioFile": "sentenceP2bn4.mp3",
+        "notes": "Nghe và chọn đáp án đúng.",
+        "question": "Năm nay, người dân miền Trung đón lễ Giáng sinh trong thời tiết như thế nào?",
+        "correctAnswer": "Thời tiết đẹp và hửng nắng.",
+        "options": [
+            "Mưa liên miên.",
+            "Trời quang mây tạnh.",
+            "Thời tiết đẹp và hửng nắng.",
+            "Thời tiết lạnh và mưa liên miên."
+        ]
+    }
+];
 
-            const sentenceP3ht = new Array(3).fill(null).flatMap((_, i) => ([
-                {
-                    audioFile: `${baseAudioUrl}${30 + i}.mp3`,
-                    notes: "Nội dung chú ý Hội thoại Phần 3",
-                    question: `Nội dung câu hỏi Hội thoại, câu ${30 + (i*2)}`,
-                    correctAnswer: "Đáp án A",
-                    options: ["Đáp án A", "Đáp án B", "Đáp án C", "Đáp án D"]
-                },
-                {
-                    audioFile: `${baseAudioUrl}${30 + i}.mp3`,
-                    notes: "Nội dung chú ý Hội thoại Phần 3",
-                    question: `Nội dung câu hỏi Hội thoại, câu ${30 + (i*2) + 1}`,
-                    correctAnswer: "Đáp án A",
-                    options: ["Đáp án A", "Đáp án B", "Đáp án C", "Đáp án D"]
-                }
-            ]));
+            const sentenceP3ht = [
+    {
+        "audioFile": "sentenceP3ht1.mp3",
+        "notes": "Nghe và chọn đáp án đúng.",
+        "question": "Hai người trong hội thoại đang nói về chủ đề gì?",
+        "correctAnswer": "Về đặc trưng các mùa ở Việt Nam.",
+        "options": [
+            "Về thời tiết ở miền Bắc Việt Nam.",
+            "Về thời tiết ở Việt Nam.",
+            "Về các mùa ở Việt Nam.",
+            "Về đặc trưng các mùa ở Việt Nam."
+        ]
+    },
+    {
+        "audioFile": "sentenceP3ht1.mp3",
+        "notes": "Nghe và chọn đáp án đúng.",
+        "question": "Trong bốn mùa, Hà ghét nhất mùa nào?",
+        "correctAnswer": "Mùa hè.",
+        "options": [
+            "Mùa hè.",
+            "Mùa xuân và mùa hè.",
+            "Mùa hè và mùa đông.",
+            "Mùa xuân."
+        ]
+    },
+    {
+        "audioFile": "sentenceP3ht2.mp3",
+        "notes": "Nghe và chọn đáp án đúng.",
+        "question": "Anh Hà đi Huế để làm gì?",
+        "correctAnswer": "Để làm việc.",
+        "options": [
+            "Để du lịch.",
+            "Để gặp bạn.",
+            "Để làm việc.",
+            "Để dự đám cưới bạn."
+        ]
+    },
+    {
+        "audioFile": "sentenceP3ht2.mp3",
+        "notes": "Nghe và chọn đáp án đúng.",
+        "question": "Ngày nào anh Hà sẽ có mặt ở Hà Nội?",
+        "correctAnswer": "Khoảng mồng tám (08) tháng ba.",
+        "options": [
+            "Khoảng mồng năm (05) tháng ba.",
+            "Khoảng mồng tám (08) tháng ba.",
+            "Khoảng mồng ba (03) tháng ba.",
+            "Khoảng mười ba (13) tháng ba."
+        ]
+    },
+    {
+        "audioFile": "sentenceP3ht3.mp3",
+        "notes": "Nghe và chọn đáp án đúng.",
+        "question": "Vì sao, ở Hà Nội, người ta thường đi lại bằng xe máy?",
+        "correctAnswer": "Vì đường phố Hà Nội nhỏ.",
+        "options": [
+            "Vì xe máy rất rẻ.",
+            "Vì đường phố Hà Nội nhỏ.",
+            "Vì hay tắc đường.",
+            "Vì đi lại bằng ô tô đắt."
+        ]
+    },
+    {
+        "audioFile": "sentenceP3ht3.mp3",
+        "notes": "Nghe và chọn đáp án đúng.",
+        "question": "Vì sao Ba không thích đến trường bằng xe buýt?",
+        "correctAnswer": "Vì nhà Ba xa bến xe buýt.",
+        "options": [
+            "Vì nhà Ba xa bến xe buýt.",
+            "Vì nhà Ba gần trường.",
+            "Vì Ba đã có xe máy.",
+            "Vì Ba thích đi lại bằng xe đạp."
+        ]
+    }
+];
 
-            const sentenceP3bn = new Array(4).fill(null).flatMap((_, i) => ([
-                {
-                    audioFile: `${baseAudioUrl}${36 + i}.mp3`,
-                    notes: "Nội dung chú ý Bài nghe Phần 3",
-                    question: `Nội dung câu hỏi Bài nghe, câu ${36 + (i*2)}`,
-                    correctAnswer: "Đáp án A",
-                    options: ["Đáp án A", "Đáp án B", "Đáp án C", "Đáp án D"]
-                },
-                {
-                    audioFile: `${baseAudioUrl}${36 + i}.mp3`,
-                    notes: "Nội dung chú ý Bài nghe Phần 3",
-                    question: `Nội dung câu hỏi Bài nghe, câu ${36 + (i*2) + 1}`,
-                    correctAnswer: "Đáp án A",
-                    options: ["Đáp án A", "Đáp án B", "Đáp án C", "Đáp án D"]
-                }
-            ]));
+            const sentenceP3bn = [
+    {
+        "audioFile": "sentenceP3bn1.mp3",
+        "notes": "Nghe và chọn đáp án đúng.",
+        "question": "Người phụ nữ đã đi cửa hàng để mua gì?",
+        "correctAnswer": "Mua quần áo, tư trang cho mình.",
+        "options": [
+            "Mua quần áo, tư trang cho gia đình.",
+            "Mua quần áo, tư trang cho mình.",
+            "Mua quần áo cho con cái.",
+            "Mua quần áo, tư trang cho chồng."
+        ]
+    },
+    {
+        "audioFile": "sentenceP3bn1.mp3",
+        "notes": "Nghe và chọn đáp án đúng.",
+        "question": "Vì sao người chồng khen cô bán hàng thông minh?",
+        "correctAnswer": "Cô bán hàng biết cách làm cho khách hàng vui.",
+        "options": [
+            "Cô bán hàng bán được nhiều hàng.",
+            "Cô bán hàng biết cách làm cho khách hàng vui.",
+            "Cô bán hàng đã đoán chính xác tuổi của vợ anh ấy.",
+            "Cô bán hàng khôn ngoan."
+        ]
+    },
+    {
+        "audioFile": "sentenceP3bn2.mp3",
+        "notes": "Nghe và chọn đáp án đúng.",
+        "question": "Nét đặc trưng của chợ nổi là gì?",
+        "correctAnswer": "Mọi sự mua bán, dịch vụ, ăn uống đều diễn ra trên những chiếc ghe, thuyền.",
+        "options": [
+            "Chợ họp suốt cả ngày, nhưng nhộn nhịp nhất là vào buổi sáng.",
+            "Mọi sự mua bán, dịch vụ, ăn uống đều diễn ra trên những chiếc ghe, thuyền.",
+            "Chợ nổi là nét sinh hoạt độc đáo của vùng châu thổ sông Cửu Long.",
+            "Hàng hóa được chở ra tận Hà Nội và các địa phương ngoài Bắc."
+        ]
+    },
+    {
+        "audioFile": "sentenceP3bn2.mp3",
+        "notes": "Nghe và chọn đáp án đúng.",
+        "question": "Phần lớn các loại nông sản, trái cây ở chợ nổi được:",
+        "correctAnswer": "Bán sỉ cho các thương nhân.",
+        "options": [
+            "Bán lẻ cho các thương nhân.",
+            "Bán sỉ tận tay người tiêu dùng.",
+            "Bán sỉ cho các thương nhân.",
+            "Bán lẻ cho người tiêu dùng."
+        ]
+    },
+    {
+        "audioFile": "sentenceP3bn3.mp3",
+        "notes": "Nghe và chọn đáp án đúng.",
+        "question": "Nội dung chính của đoạn các bạn vừa nghe là gì?",
+        "correctAnswer": "Vấn đề già hóa dân số trên thế giới và ở Việt Nam.",
+        "options": [
+            "Vấn đề già hóa dân số của Việt Nam.",
+            "Vấn đề già hóa dân số trên thế giới.",
+            "Vai trò của người già ở Việt Nam.",
+            "Vấn đề già hóa dân số trên thế giới và ở Việt Nam."
+        ]
+    },
+    {
+        "audioFile": "sentenceP3bn3.mp3",
+        "notes": "Nghe và chọn đáp án đúng.",
+        "question": "Tỷ lệ già hóa dân số của châu Á đứng thứ mấy trên thế giới?",
+        "correctAnswer": "Đứng thứ ba.",
+        "options": [
+            "Đứng thứ hai.",
+            "Đứng thứ ba.",
+            "Đứng thứ tư.",
+            "Đứng thứ năm."
+        ]
+    },
+    {
+        "audioFile": "sentenceP3bn4.mp3",
+        "notes": "Nghe và chọn đáp án đúng.",
+        "question": "Chúng ta phải ngủ để:",
+        "correctAnswer": "Lấy lại thăng bằng cho cơ thể.",
+        "options": [
+            "Đáp ứng nhu cầu sinh sản của con người.",
+            "Giải tỏa mệt mỏi, căng thẳng để bắt đầu cho một ngày mới.",
+            "Lấy lại thăng bằng cho cơ thể.",
+            "Cả A và B."
+        ]
+    },
+    {
+        "audioFile": "sentenceP3bn4.mp3",
+        "notes": "Nghe và chọn đáp án đúng.",
+        "question": "Ngủ sâu là cần thiết để:",
+        "correctAnswer": "Gan hoàn thành việc loại trừ các độc tố trong cơ thể.",
+        "options": [
+            "Gan hoàn thành việc loại trừ các độc tố trong cơ thể.",
+            "Tránh ngủ gật trong hội nghị, lớp học, công sở vào ngày hôm sau.",
+            "Tránh tình trạng gan nhiễm mỡ, một căn bệnh phổ biến hiện nay.",
+            "Trợ giúp gan bắt đầu quá trình bài tiết."
+        ]
+    }
+];
 
-            const sentenceP4 = new Array(6).fill(null).flatMap((_, i) => ([
-                {
-                    audioFile: `${baseAudioUrl}${44 + i}.mp3`,
-                    notes: "Nội dung chú ý Phần 4",
-                    question: `Nội dung câu hỏi Phần 4, câu ${44 + (i*2)}`,
-                    correctAnswer: "Đáp án A",
-                    options: ["Đáp án A", "Đáp án B", "Đáp án C", "Đáp án D"]
-                },
-                {
-                    audioFile: `${baseAudioUrl}${44 + i}.mp3`,
-                    notes: "Nội dung chú ý Phần 4",
-                    question: `Nội dung câu hỏi Phần 4, câu ${44 + (i*2) + 1}`,
-                    correctAnswer: "Đáp án A",
-                    options: ["Đáp án A", "Đáp án B", "Đáp án C", "Đáp án D"]
-                }
-            ]));
-            
+            const sentenceP4 = [
+    {
+        "audioFile": "sentenceP4-1.mp3",
+        "notes": "Nghe và chọn đáp án đúng.",
+        "question": "Trong điều kiện tự nhiên, nước tồn tại dưới mấy dạng?",
+        "correctAnswer": "Tồn tại dưới 3 dạng.",
+        "options": [
+            "Tồn tại dưới 2 dạng.",
+            "Tồn tại dưới 3 dạng.",
+            "Tồn tại dưới 4 dạng.",
+            "Tồn tại một cách vô hình."
+        ]
+    },
+    {
+        "audioFile": "sentenceP4-1.mp3",
+        "notes": "Nghe và chọn đáp án đúng.",
+        "question": "Một chu kỳ nước gồm 4 giai đoạn. Giai đoạn đầu tiên và cuối cùng nước tồn tại dưới dạng nào?",
+        "correctAnswer": "Tồn tại dưới dạng lỏng.",
+        "options": [
+            "Tồn tại dưới dạng rắn.",
+            "Tồn tại dưới dạng khí.",
+            "Tồn tại dưới dạng lỏng.",
+            "Tồn tại dưới cả 3 dạng trên."
+        ]
+    },
+    {
+        "audioFile": "sentenceP4-2.mp3",
+        "notes": "Nghe và chọn đáp án đúng.",
+        "question": "Tác giả đã đưa ra mấy lý do khi phân tích tác hại của trò chơi xổ số nhà nước?",
+        "correctAnswer": "Ba lí do.",
+        "options": [
+            "Hai lí do.",
+            "Ba lí do.",
+            "Bốn lí do.",
+            "Năm lí do."
+        ]
+    },
+    {
+        "audioFile": "sentenceP4-2.mp3",
+        "notes": "Nghe và chọn đáp án đúng.",
+        "question": "Thái độ của tác giả đối với việc chơi xổ số như thế nào?",
+        "correctAnswer": "Phản đối hoàn toàn việc chơi xổ số.",
+        "options": [
+            "Ủng hộ hoàn toàn việc chơi xổ số.",
+            "Phản đối hoàn toàn việc chơi xổ số.",
+            "Vừa ủng hộ vừa phản đối việc chơi xổ số.",
+            "Không thể hiện quan điểm, thái độ của mình."
+        ]
+    },
+    {
+        "audioFile": "sentenceP4-3.mp3",
+        "notes": "Nghe và chọn đáp án đúng.",
+        "question": "Hãy cho biết máy bay gặp tai nạn nhiều hơn khi cất cánh hay hạ cánh?",
+        "correctAnswer": "Khi hạ cánh gặp nhiều hơn khi cất cánh.",
+        "options": [
+            "Khi cất cánh và hạ cánh đều bằng nhau.",
+            "Khi cất cánh gặp nhiều hơn khi hạ cánh.",
+            "Khi hạ cánh gặp nhiều hơn khi cất cánh.",
+            "Cả khi cất cánh lẫn hạ cánh đều gặp tai nạn nhiều nhất."
+        ]
+    },
+    {
+        "audioFile": "sentenceP4-3.mp3",
+        "notes": "Nghe và chọn đáp án đúng.",
+        "question": "Theo số liệu tổng kết tai nạn máy bay từ 1950 đến 2004 thì nguyên nhân nào chiếm số lượng nhiều nhất?",
+        "correctAnswer": "Do sai lầm của người lái.",
+        "options": [
+            "Do trục trặc máy móc.",
+            "Do không rõ nguyên nhân.",
+            "Do thời tiết.",
+            "Do sai lầm của người lái."
+        ]
+    },
+    {
+        "audioFile": "sentenceP4-4.mp3",
+        "notes": "Nghe và chọn đáp án đúng.",
+        "question": "Hãy cho biết, thành ngữ “nam thanh nữ tú” nghĩa là gì?",
+        "correctAnswer": "Nam và nữ thanh niên trẻ, đẹp.",
+        "options": [
+            "Nam và nữ bạn bè.",
+            "Nam và nữ thanh niên.",
+            "Nam và nữ thanh niên trẻ, đẹp.",
+            "Nữ làm phù dâu, nam làm phù rể."
+        ]
+    },
+    {
+        "audioFile": "sentenceP4-4.mp3",
+        "notes": "Nghe và chọn đáp án đúng.",
+        "question": "Trong các đám cưới thời xưa, các phù dâu có những nhiệm vụ gì?",
+        "correctAnswer": "Để truyền kinh nghiệm làm dâu, làm vợ, làm mẹ.",
+        "options": [
+            "Làm cho đám cưới thêm đẹp, thêm vui.",
+            "Để truyền kinh nghiệm làm dâu, làm vợ, làm mẹ.",
+            "Để giúp đỡ cô dâu lúc ốm đau.",
+            "Để làm nền cho cô dâu thêm đẹp hơn, xinh hơn."
+        ]
+    },
+    {
+        "audioFile": "sentenceP4-5.mp3",
+        "notes": "Nghe và chọn đáp án đúng.",
+        "question": "Nội dung chính của đoạn mà bạn vừa nghe chủ yếu đề cập đến:",
+        "correctAnswer": "Chủ yếu là quan niệm về việc sinh con của người Việt.",
+        "options": [
+            "Việc lập gia đình và sinh con của người Việt.",
+            "Chính sách sinh đẻ của Nhà nước Việt Nam.",
+            "Xã hội Việt Nam là một xã hội phụ hệ.",
+            "Chủ yếu là quan niệm về việc sinh con của người Việt."
+        ]
+    },
+    {
+        "audioFile": "sentenceP4-5.mp3",
+        "notes": "Nghe và chọn đáp án đúng.",
+        "question": "Điều gì dưới đây thể hiện cao nhất mức độ quan trọng của việc có con đối với người Việt?",
+        "correctAnswer": "Nếu không có con thì họ xin con nuôi hoặc kết hôn lần hai và sinh con.",
+        "options": [
+            "Nếu hai vợ chồng có con thì quan hệ bền chặt hơn.",
+            "Nếu hai vợ chồng có con thì họ cảm thấy hạnh phúc hơn.",
+            "Nếu hai vợ chồng có con thì họ có nhiều trách nhiệm hơn.",
+            "Nếu không có con thì họ xin con nuôi hoặc kết hôn lần hai và sinh con."
+        ]
+    },
+    {
+        "audioFile": "sentenceP4-6.mp3",
+        "notes": "Nghe và chọn đáp án đúng.",
+        "question": "Chuột đồng thấy thức ăn thường ngày của Chuột nhà gồm:",
+        "correctAnswer": "Đỗ, thóc, pho mát, mật ong...",
+        "options": [
+            "Đỗ, thóc, pho mát...",
+            "Đỗ, thóc, pho mát, mật ong...",
+            "Đỗ, thóc, pho mát, mật ong, đại mạch.",
+            "Thóc, pho mát, mật ong, đại mạch...."
+        ]
+    },
+    {
+        "audioFile": "sentenceP4-6.mp3",
+        "notes": "Nghe và chọn đáp án đúng.",
+        "question": "Chuột đồng tạm biệt Chuột nhà, bỏ thành phố về quê có ngụ ý gì?",
+        "correctAnswer": "Thà sống giản dị trong bình yên còn hơn sung túc, đầy đủ trong lo lắng, sợ hãi.",
+        "options": [
+            "Cuộc sống thành phố không hợp với Chuột đồng.",
+            "Chuột đồng và chuột nhà có quan điểm sống khác nhau.",
+            "Thà sống giản dị trong bình yên còn hơn sung túc, đầy đủ trong lo lắng, sợ hãi.",
+            "Cuộc sống thành phố sung túc, đầy đủ nhưng luôn sống trong lo lắng sợ hãi."
+        ]
+    }
+];
             // --- COMBINED DATA AND STATE MANAGEMENT ---
             const allQuestions = [
                 ...sentenceP1,
@@ -475,7 +1071,7 @@
             const audioPlayer = document.getElementById('audioPlayer');
             const instructionBox = document.getElementById('current-section');
             const indicatorList = document.getElementById('indicator-list');
-            const questionNumberInput = document.getElementById('questionNumberInput');
+            const questionNumberDisplay = document.getElementById('questionNumberDisplay');
             const prevBtn = document.getElementById('prevBtn');
             const nextBtn = document.getElementById('nextBtn');
             const replayBtn = document.getElementById('replayBtn');
@@ -502,7 +1098,45 @@
             let isLooping = false;
             let controlsVisible = true;
 
+            // --- AUDIO CONTROL FUNCTIONS ---
+            function toggleAudioControls(disable) {
+                const elements = [
+                    { element: rewind5sButton, container: tuaButtons },
+                    { element: rewind1sButton, container: tuaButtons },
+                    { element: forward1sButton, container: tuaButtons },
+                    { element: forward5sButton, container: tuaButtons },
+                    { element: pausePlayButton, container: document.querySelector('.action-buttons') },
+                    { element: loopButton, container: document.querySelector('.button-group') },
+                    { element: clearButton, container: document.querySelector('.button-group') },
+                    { element: timeDisplay, container: document.querySelector('.time-row') },
+                    { element: loopStartEl, container: document.querySelector('.time-box-group') },
+                    { element: loopEndEl, container: document.querySelector('.time-box-group') }
+                ];
+                elements.forEach(({ element, container }) => {
+                    if (disable) {
+                        element.classList.add('disabled');
+                        element.style.display = 'none';
+                        if (container && !container.querySelectorAll('.control-button:not(.disabled), .time-box:not(.disabled), p#timeDisplay:not(.disabled)').length) {
+                            container.style.display = 'none';
+                        }
+                    } else {
+                        element.classList.remove('disabled');
+                        element.style.display = '';
+                        if (container) {
+                            container.style.display = '';
+                        }
+                    }
+                });
+                // Ensure toggleControlsButton is always visible and enabled
+                toggleControlsButton.classList.remove('disabled');
+                toggleControlsButton.style.display = '';
+                toggleControlsButton.disabled = false;
+            }
+
             function formatTime(seconds) {
+                if (seconds === undefined || seconds === null || isNaN(seconds)) {
+                    return "--:--";
+                }
                 const minutes = Math.floor(seconds / 60);
                 const secs = Math.floor(seconds % 60);
                 return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
@@ -539,8 +1173,14 @@
                 if (isLooping && customLoopStart !== null && customLoopEnd !== null) {
                     if (audioPlayer.currentTime >= customLoopEnd) {
                         audioPlayer.currentTime = customLoopStart;
+                        audioPlayer.play();
                     }
                 }
+            };
+
+            audioPlayer.onerror = function() {
+                console.error("Lỗi tải file âm thanh:", audioPlayer.src);
+                alert("Không thể tải file âm thanh: " + audioPlayer.src);
             };
 
             rewind5sButton.onclick = () => {
@@ -557,20 +1197,22 @@
             };
             forward1sButton.onclick = () => {
                 if (!isLooping) {
-                    audioPlayer.currentTime = Math.min(audioPlayer.duration, audioPlayer.currentTime + 1);
+                    audioPlayer.currentTime = Math.min(audioPlayer.duration || Infinity, audioPlayer.currentTime + 1);
                     updateTimeDisplay();
                 }
             };
             forward5sButton.onclick = () => {
                 if (!isLooping) {
-                    audioPlayer.currentTime = Math.min(audioPlayer.duration, audioPlayer.currentTime + 5);
+                    audioPlayer.currentTime = Math.min(audioPlayer.duration || Infinity, audioPlayer.currentTime + 5);
                     updateTimeDisplay();
                 }
             };
 
             pausePlayButton.onclick = () => {
                 if (audioPlayer.paused) {
-                    audioPlayer.play();
+                    audioPlayer.play().catch(error => {
+                        console.error("Lỗi khi phát âm thanh:", error);
+                    });
                     pausePlayButton.textContent = "停";
                 } else {
                     audioPlayer.pause();
@@ -581,12 +1223,14 @@
             loopButton.onclick = () => {
                 if (customLoopStart !== null && customLoopEnd !== null) {
                     audioPlayer.currentTime = customLoopStart;
-                    audioPlayer.play();
+                    audioPlayer.play().catch(error => {
+                        console.error("Lỗi khi phát âm thanh trong chế độ lặp:", error);
+                    });
                     isLooping = true;
-                    rewind5sButton.disabled = true;
-                    rewind1sButton.disabled = true;
-                    forward1sButton.disabled = true;
-                    forward5sButton.disabled = true;
+                    <!-- rewind5sButton.disabled = true; -->
+                    <!-- rewind1sButton.disabled = true; -->
+                    <!-- forward1sButton.disabled = true; -->
+                    <!-- forward5sButton.disabled = true; -->
                 }
             };
 
@@ -612,6 +1256,9 @@
                     loopEndEl.style.display = "none";
                     loopButton.style.display = "none";
                     clearButton.style.display = "none";
+                    document.querySelector('.time-row').style.display = "none";
+                    document.querySelector('.time-box-group').style.display = "none";
+                    document.querySelector('.button-group').style.display = "none";
                     toggleControlsButton.textContent = "示";
                     controlsVisible = false;
                 } else {
@@ -622,8 +1269,16 @@
                     loopEndEl.style.display = "inline-block";
                     loopButton.style.display = "inline-flex";
                     clearButton.style.display = "inline-flex";
+                    document.querySelector('.time-row').style.display = "flex";
+                    document.querySelector('.time-box-group').style.display = "flex";
+                    document.querySelector('.button-group').style.display = "flex";
                     toggleControlsButton.textContent = "藏";
                     controlsVisible = true;
+                }
+                // Respect sentenceP1 restrictions
+                const isSentenceP1 = questionGroups[currentGroupIndex]?.questions[0]?.audioFile === "sentenceP1.mp3";
+                if (isSentenceP1) {
+                    toggleAudioControls(true);
                 }
             };
 
@@ -641,11 +1296,12 @@
                 const group = questionGroups[currentGroupIndex];
                 const start = group.startQuestion;
                 const end = group.endQuestion;
+                const isSentenceP1 = group.questions[0].audioFile === "sentenceP1.mp3";
 
                 // Update instruction box
                 let questionNumberText = (start === end) ? `${start}` : `${start}-${end}`;
                 instructionBox.textContent = `Phần ${group.part} - Câu ${questionNumberText}`;
-                questionNumberInput.value = start;
+                questionNumberDisplay.textContent = questionNumberText;
                 
                 // Render questions
                 questionContainer.innerHTML = '';
@@ -653,6 +1309,7 @@
                     const globalIndex = start + i;
                     const questionCard = document.createElement('div');
                     questionCard.classList.add('question-card', 'bg-gray-50', 'p-6', 'rounded-xl', 'shadow-sm', 'mb-4');
+                    questionCard.id = `question-card-${globalIndex}`;
                     questionCard.innerHTML = `
                         <p class="text-sm text-gray-500 italic mb-2">Chú ý: ${q.notes}</p>
                         <h4 class="text-lg font-bold mb-4">Câu ${globalIndex}: ${q.question}</h4>
@@ -667,57 +1324,89 @@
                         optionElement.textContent = option;
                         optionsContainer.appendChild(optionElement);
 
-                        // Set selected state if already answered
                         if (userAnswers[globalIndex] && userAnswers[globalIndex].selectedOption === option) {
                             optionElement.classList.add('selected');
                         }
 
-                        // Add click event listener
                         optionElement.addEventListener('click', () => {
                             handleAnswer(globalIndex, option);
                         });
                     });
                 });
 
-                // Play audio and set loop points automatically for the segment
+                // Disable or enable audio controls based on whether it's sentenceP1
+                toggleAudioControls(isSentenceP1);
+
+                // Play audio and set loop points for the segment
                 const questionData = group.questions[0];
-                customLoopStart = questionData.start;
-                customLoopEnd = questionData.end;
-                loopStartEl.textContent = formatTime(customLoopStart);
-                loopEndEl.textContent = formatTime(customLoopEnd);
-                playAudio(questionData);
+                audioPlayer.src = questionData.audioFile;
+                audioPlayer.load();
+
+                audioPlayer.onloadedmetadata = () => {
+                    const startTime = questionData.start || 0;
+                    const endTime = questionData.end || audioPlayer.duration;
+
+                    // Reset custom loop points for new question group
+                    clearButton.onclick();
+
+                    loopStartEl.textContent = formatTime(startTime);
+                    loopEndEl.textContent = formatTime(endTime);
+
+                    audioPlayer.currentTime = startTime;
+                    audioPlayer.play().catch(error => {
+                        console.error("Lỗi khi phát âm thanh:", error);
+                    });
+
+                    const stopPlayback = () => {
+                        if (audioPlayer.currentTime >= endTime && !isLooping) {
+                            audioPlayer.pause();
+                            audioPlayer.removeEventListener('timeupdate', stopPlayback);
+                        }
+                    };
+                    audioPlayer.addEventListener('timeupdate', stopPlayback);
+                };
+
                 updateUI();
             }
 
             function playAudio(questionData) {
-                const audioFile = questionData.audioFile;
-                const start = customLoopStart || questionData.start;
-                const end = customLoopEnd || questionData.end;
+                audioPlayer.src = questionData.audioFile;
+                audioPlayer.load();
 
-                audioPlayer.src = audioFile;
-                audioPlayer.currentTime = start;
-                audioPlayer.play();
-                
-                const stopPlayback = () => {
-                    if (audioPlayer.currentTime >= end) {
-                        audioPlayer.pause();
-                        audioPlayer.removeEventListener('timeupdate', stopPlayback);
-                    }
+                const isSentenceP1 = questionData.audioFile === "sentenceP1.mp3";
+                toggleAudioControls(isSentenceP1);
+
+                audioPlayer.onloadedmetadata = () => {
+                    const start = isSentenceP1 ? (questionData.start || 0) : (customLoopStart !== null ? customLoopStart : (questionData.start || 0));
+                    const end = isSentenceP1 ? (questionData.end || audioPlayer.duration) : (customLoopEnd !== null ? customLoopEnd : (questionData.end || audioPlayer.duration));
+
+                    loopStartEl.textContent = formatTime(start);
+                    loopEndEl.textContent = formatTime(end);
+
+                    audioPlayer.currentTime = start;
+                    audioPlayer.play().catch(error => {
+                        console.error("Lỗi khi phát âm thanh:", error);
+                    });
+
+                    const stopPlayback = () => {
+                        if (audioPlayer.currentTime >= end && !isLooping) {
+                            audioPlayer.pause();
+                            audioPlayer.removeEventListener('timeupdate', stopPlayback);
+                        }
+                    };
+                    audioPlayer.addEventListener('timeupdate', stopPlayback);
                 };
-                audioPlayer.addEventListener('timeupdate', stopPlayback);
             }
 
             function handleAnswer(questionIndex, selectedOption) {
                 const group = questionGroups[currentGroupIndex];
                 const globalIndicesInGroup = group.questions.map((_, i) => group.startQuestion + i);
                 
-                // Store the answer
                 userAnswers[questionIndex] = {
                     selectedOption: selectedOption,
                     correctAnswer: allQuestions[questionIndex - 1].correctAnswer
                 };
 
-                // Update UI for the answered question
                 const optionsContainer = document.getElementById(`options-${questionIndex}`);
                 if (optionsContainer) {
                     Array.from(optionsContainer.children).forEach(optionEl => {
@@ -731,7 +1420,6 @@
                 
                 updateUI();
 
-                // If auto-continue is on and all questions in the group are answered, move to the next group
                 if (autoContinueEnabled) {
                     const allAnsweredInGroup = globalIndicesInGroup.every(idx => userAnswers[idx]);
                     if (allAnsweredInGroup) {
@@ -751,19 +1439,24 @@
             }
 
             function updateUI() {
-                // Update indicator box
                 indicatorList.innerHTML = '';
                 const allQuestionNumbers = Array.from({length: allQuestions.length}, (_, i) => i + 1);
+                const currentGroup = questionGroups[currentGroupIndex];
+                const currentStart = currentGroup ? currentGroup.startQuestion : null;
+                const currentEnd = currentGroup ? currentGroup.endQuestion : null;
                 
                 allQuestionNumbers.forEach(num => {
                     const isAnswered = userAnswers[num] !== undefined;
                     const indicatorItem = document.createElement('span');
                     indicatorItem.textContent = num;
-                    indicatorItem.classList.add('indicator-item', 'py-1', 'px-2', 'rounded-full', 'font-semibold', 'transition-colors', 'duration-200');
+                    indicatorItem.classList.add('indicator-item', 'py-1', 'px-2', 'rounded-full', 'font-semibold', 'transition-colors', 'duration-200', 'cursor-pointer');
                     if (isAnswered) {
                         indicatorItem.classList.add('bg-green-200', 'text-green-800');
                     } else {
                         indicatorItem.classList.add('bg-red-200', 'text-red-800');
+                    }
+                    if (currentStart && currentEnd && num >= currentStart && num <= currentEnd) {
+                        indicatorItem.classList.add('active');
                     }
                     indicatorItem.addEventListener('click', () => {
                         jumpToQuestion(num);
@@ -830,7 +1523,6 @@
                     detailedReport.appendChild(reportItem);
                 }
                 
-                // Hide floating controls
                 document.querySelector('.controls-container').style.display = 'none';
                 document.getElementById('floatingControls').style.display = 'none';
             }
@@ -840,19 +1532,11 @@
             nextBtn.addEventListener('click', nextQuestion);
             replayBtn.addEventListener('click', () => {
                 const currentGroup = questionGroups[currentGroupIndex];
+                clearButton.onclick();
                 playAudio(currentGroup.questions[0]);
             });
             autoContinueCheckbox.addEventListener('change', (e) => {
                 autoContinueEnabled = e.target.checked;
-            });
-            questionNumberInput.addEventListener('change', (e) => {
-                const questionNumber = parseInt(e.target.value);
-                if (questionNumber >= 1 && questionNumber <= allQuestions.length) {
-                    jumpToQuestion(questionNumber);
-                } else {
-                    // Reset to current group start if invalid
-                    e.target.value = questionGroups[currentGroupIndex].startQuestion;
-                }
             });
 
             // Initial render
