@@ -272,11 +272,11 @@
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // --- ARRAY DECLARATIONS ---
-            // Paste your array declarations (sentenceP1, sentenceP2ht, sentenceP2mt, sentenceP2bn, sentenceP3ht, sentenceP3bn, sentenceP4) here
-            const baseAudioUrl = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-";
-            // --- END ARRAY DECLARATIONS ---
+document.addEventListener('DOMContentLoaded', () => {
+    // --- ARRAY DECLARATIONS ---
+    // 👉 Dán lại các mảng sentenceP1, sentenceP2ht, sentenceP2mt, sentenceP2bn, sentenceP3ht, sentenceP3bn, sentenceP4 của bạn tại đây
+    // const baseAudioUrl = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-";
+	// --- END ARRAY DECLARATIONS ---
             const sentenceP1 = [
     {
         "audioFile": "sentenceP1.mp3",
@@ -485,7 +485,7 @@
                         "7 giờ kém 5 phút.",
                         "7 giờ.",
                         "7 giờ 5 phút.",
-                        "7 giờ qua phút."
+                        "7 giờ qua 10 phuts."
                     ]
                 },
                 {
@@ -695,10 +695,10 @@
         "question": "Ngày nào anh Hà sẽ có mặt ở Hà Nội?",
         "correctAnswer": "Khoảng mồng tám (08) tháng ba.",
         "options": [
-            "Khoảng mồng năm (05) tháng ba.",
-            "Khoảng mồng tám (08) tháng ba.",
-            "Khoảng mồng ba (03) tháng ba.",
-            "Khoảng mười ba (13) tháng ba."
+            "Khoảng mồng năm tháng ba.",
+            "Khoảng mồng tám tháng ba.",
+            "Khoảng mồng ba tháng ba.",
+            "Khoảng mười ba tháng ba."
         ]
     },
     {
@@ -972,576 +972,598 @@
         ]
     }
 ];
-            // --- COMBINED DATA AND STATE MANAGEMENT ---
-            const allQuestions = [
-                ...sentenceP1,
-                ...sentenceP2ht,
-                ...sentenceP2mt,
-                ...sentenceP2bn,
-                ...sentenceP3ht,
-                ...sentenceP3bn,
-                ...sentenceP4
-            ];
-            const questionGroups = [];
-            let currentGlobalIndex = 1;
-            
-            // Group Part 1 questions (1 question per audio)
-            for (let i = 0; i < sentenceP1.length; i++) {
-                questionGroups.push({
-                    questions: [allQuestions[currentGlobalIndex - 1]],
-                    startQuestion: currentGlobalIndex,
-                    endQuestion: currentGlobalIndex,
-                    part: 1
-                });
-                currentGlobalIndex++;
-            }
+    // --- COMBINED DATA AND STATE MANAGEMENT ---
+    const allQuestions = [
+        ...sentenceP1,
+        ...sentenceP2ht,
+        ...sentenceP2mt,
+        ...sentenceP2bn,
+        ...sentenceP3ht,
+        ...sentenceP3bn,
+        ...sentenceP4
+    ];
+    const questionGroups = [];
+    let currentGlobalIndex = 1;
 
-            // Group Part 2 questions
-            // P2ht (2 questions, 1 per audio)
-            for (let i = 0; i < sentenceP2ht.length; i++) {
-                questionGroups.push({
-                    questions: [allQuestions[currentGlobalIndex - 1]],
-                    startQuestion: currentGlobalIndex,
-                    endQuestion: currentGlobalIndex,
-                    part: 2
-                });
-                currentGlobalIndex++;
-            }
-            // P2mt (4 questions, 1 per audio)
-            for (let i = 0; i < sentenceP2mt.length; i++) {
-                questionGroups.push({
-                    questions: [allQuestions[currentGlobalIndex - 1]],
-                    startQuestion: currentGlobalIndex,
-                    endQuestion: currentGlobalIndex,
-                    part: 2
-                });
-                currentGlobalIndex++;
-            }
-            // P2bn (8 questions, 2 per audio)
-            for (let i = 0; i < sentenceP2bn.length; i += 2) {
-                questionGroups.push({
-                    questions: [allQuestions[currentGlobalIndex - 1], allQuestions[currentGlobalIndex]],
-                    startQuestion: currentGlobalIndex,
-                    endQuestion: currentGlobalIndex + 1,
-                    part: 2
-                });
-                currentGlobalIndex += 2;
-            }
+    // --- NEW: Cache trật tự đã xáo cho từng câu (mỗi câu = 1 lần xáo trong phiên) ---
+    const shuffledOptionsCache = {}; // key: số câu (1-based), value: mảng đáp án đã xáo (đóng băng)
 
-            // Group Part 3 questions
-            // P3ht (6 questions, 2 per audio)
-            for (let i = 0; i < sentenceP3ht.length; i += 2) {
-                questionGroups.push({
-                    questions: [allQuestions[currentGlobalIndex - 1], allQuestions[currentGlobalIndex]],
-                    startQuestion: currentGlobalIndex,
-                    endQuestion: currentGlobalIndex + 1,
-                    part: 3
-                });
-                currentGlobalIndex += 2;
-            }
-            // P3bn (8 questions, 2 per audio)
-            for (let i = 0; i < sentenceP3bn.length; i += 2) {
-                questionGroups.push({
-                    questions: [allQuestions[currentGlobalIndex - 1], allQuestions[currentGlobalIndex]],
-                    startQuestion: currentGlobalIndex,
-                    endQuestion: currentGlobalIndex + 1,
-                    part: 3
-                });
-                currentGlobalIndex += 2;
-            }
+    // --- NEW: Hàm xáo trộn Fisher–Yates (tạo bản sao, không phá mảng gốc) ---
+    function shuffleArray(array) {
+        const arr = array.slice();
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+    }
 
-            // Group Part 4 questions (12 questions, 2 per audio)
-            for (let i = 0; i < sentenceP4.length; i += 2) {
-                questionGroups.push({
-                    questions: [allQuestions[currentGlobalIndex - 1], allQuestions[currentGlobalIndex]],
-                    startQuestion: currentGlobalIndex,
-                    endQuestion: currentGlobalIndex + 1,
-                    part: 4
-                });
-                currentGlobalIndex += 2;
-            }
-            
-            // App state
-            let currentGroupIndex = 0;
-            const userAnswers = {};
-            let autoContinueEnabled = false;
+    // --- NEW: Lấy trật tự đáp án đã xáo của 1 câu; nếu chưa có thì xáo và lưu ---
+    function getShuffledOptions(questionNumber, optionsArray) {
+        if (!shuffledOptionsCache[questionNumber]) {
+            const shuffled = shuffleArray(optionsArray);
+            shuffledOptionsCache[questionNumber] = Object.freeze(shuffled);
+        }
+        return shuffledOptionsCache[questionNumber];
+    }
 
-            // --- UI ELEMENTS ---
-            const questionContainer = document.getElementById('question-container');
-            const audioPlayer = document.getElementById('audioPlayer');
-            const instructionBox = document.getElementById('current-section');
-            const indicatorList = document.getElementById('indicator-list');
-            const questionNumberDisplay = document.getElementById('questionNumberDisplay');
-            const prevBtn = document.getElementById('prevBtn');
-            const nextBtn = document.getElementById('nextBtn');
-            const replayBtn = document.getElementById('replayBtn');
-            const autoContinueCheckbox = document.getElementById('autoContinue');
-
-            // Audio Controls Elements
-            const timeDisplay = document.getElementById("timeDisplay");
-            const loopStartEl = document.getElementById("loopStart");
-            const loopEndEl = document.getElementById("loopEnd");
-            const loopButton = document.getElementById("loopButton");
-            const clearButton = document.getElementById("clearButton");
-            const rewind5sButton = document.getElementById("rewind5sButton");
-            const rewind1sButton = document.getElementById("rewind1sButton");
-            const forward1sButton = document.getElementById("forward1sButton");
-            const forward5sButton = document.getElementById("forward5sButton");
-            const pausePlayButton = document.getElementById("pausePlayButton");
-            const toggleControlsButton = document.getElementById("toggleControlsButton");
-            const tuaButtons = document.querySelector(".tua-buttons");
-
-            // Audio Control Variables
-            let customLoopStart = null;
-            let customLoopEnd = null;
-            let clickCount = 0;
-            let isLooping = false;
-            let controlsVisible = true;
-
-            // --- AUDIO CONTROL FUNCTIONS ---
-            function toggleAudioControls(disable) {
-                const elements = [
-                    { element: rewind5sButton, container: tuaButtons },
-                    { element: rewind1sButton, container: tuaButtons },
-                    { element: forward1sButton, container: tuaButtons },
-                    { element: forward5sButton, container: tuaButtons },
-                    { element: pausePlayButton, container: document.querySelector('.action-buttons') },
-                    { element: loopButton, container: document.querySelector('.button-group') },
-                    { element: clearButton, container: document.querySelector('.button-group') },
-                    { element: timeDisplay, container: document.querySelector('.time-row') },
-                    { element: loopStartEl, container: document.querySelector('.time-box-group') },
-                    { element: loopEndEl, container: document.querySelector('.time-box-group') }
-                ];
-                elements.forEach(({ element, container }) => {
-                    if (disable) {
-                        element.classList.add('disabled');
-                        element.style.display = 'none';
-                        if (container && !container.querySelectorAll('.control-button:not(.disabled), .time-box:not(.disabled), p#timeDisplay:not(.disabled)').length) {
-                            container.style.display = 'none';
-                        }
-                    } else {
-                        element.classList.remove('disabled');
-                        element.style.display = '';
-                        if (container) {
-                            container.style.display = '';
-                        }
-                    }
-                });
-                // Ensure toggleControlsButton is always visible and enabled
-                toggleControlsButton.classList.remove('disabled');
-                toggleControlsButton.style.display = '';
-                toggleControlsButton.disabled = false;
-            }
-
-            function formatTime(seconds) {
-                if (seconds === undefined || seconds === null || isNaN(seconds)) {
-                    return "--:--";
-                }
-                const minutes = Math.floor(seconds / 60);
-                const secs = Math.floor(seconds % 60);
-                return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-            }
-
-            function updateTimeDisplay() {
-                timeDisplay.textContent = formatTime(audioPlayer.currentTime);
-            }
-
-            // Set up audio event listeners
-            const updateInterval = setInterval(updateTimeDisplay, 1000);
-
-            timeDisplay.onclick = () => {
-                if (audioPlayer.paused) {
-                    clickCount++;
-                    if (clickCount === 1) {
-                        customLoopStart = audioPlayer.currentTime;
-                        loopStartEl.textContent = formatTime(customLoopStart);
-                    } else if (clickCount === 2) {
-                        customLoopEnd = audioPlayer.currentTime;
-                        if (customLoopEnd <= customLoopStart) {
-                            customLoopEnd = null;
-                            loopEndEl.textContent = "--:--";
-                        } else {
-                            loopEndEl.textContent = formatTime(customLoopEnd);
-                        }
-                        clickCount = 0;
-                    }
-                }
-            };
-
-            audioPlayer.ontimeupdate = function() {
-                updateTimeDisplay();
-                if (isLooping && customLoopStart !== null && customLoopEnd !== null) {
-                    if (audioPlayer.currentTime >= customLoopEnd) {
-                        audioPlayer.currentTime = customLoopStart;
-                        audioPlayer.play();
-                    }
-                }
-            };
-
-            audioPlayer.onerror = function() {
-                console.error("Lỗi tải file âm thanh:", audioPlayer.src);
-                alert("Không thể tải file âm thanh: " + audioPlayer.src);
-            };
-
-            rewind5sButton.onclick = () => {
-                if (!isLooping) {
-                    audioPlayer.currentTime = Math.max(0, audioPlayer.currentTime - 5);
-                    updateTimeDisplay();
-                }
-            };
-            rewind1sButton.onclick = () => {
-                if (!isLooping) {
-                    audioPlayer.currentTime = Math.max(0, audioPlayer.currentTime - 1);
-                    updateTimeDisplay();
-                }
-            };
-            forward1sButton.onclick = () => {
-                if (!isLooping) {
-                    audioPlayer.currentTime = Math.min(audioPlayer.duration || Infinity, audioPlayer.currentTime + 1);
-                    updateTimeDisplay();
-                }
-            };
-            forward5sButton.onclick = () => {
-                if (!isLooping) {
-                    audioPlayer.currentTime = Math.min(audioPlayer.duration || Infinity, audioPlayer.currentTime + 5);
-                    updateTimeDisplay();
-                }
-            };
-
-            pausePlayButton.onclick = () => {
-                if (audioPlayer.paused) {
-                    audioPlayer.play().catch(error => {
-                        console.error("Lỗi khi phát âm thanh:", error);
-                    });
-                    pausePlayButton.textContent = "停";
-                } else {
-                    audioPlayer.pause();
-                    pausePlayButton.textContent = "播";
-                }
-            };
-
-            loopButton.onclick = () => {
-                if (customLoopStart !== null && customLoopEnd !== null) {
-                    audioPlayer.currentTime = customLoopStart;
-                    audioPlayer.play().catch(error => {
-                        console.error("Lỗi khi phát âm thanh trong chế độ lặp:", error);
-                    });
-                    isLooping = true;
-                    <!-- rewind5sButton.disabled = true; -->
-                    <!-- rewind1sButton.disabled = true; -->
-                    <!-- forward1sButton.disabled = true; -->
-                    <!-- forward5sButton.disabled = true; -->
-                }
-            };
-
-            clearButton.onclick = () => {
-                customLoopStart = null;
-                customLoopEnd = null;
-                loopStartEl.textContent = "--:--";
-                loopEndEl.textContent = "--:--";
-                clickCount = 0;
-                isLooping = false;
-                rewind5sButton.disabled = false;
-                rewind1sButton.disabled = false;
-                forward1sButton.disabled = false;
-                forward5sButton.disabled = false;
-            };
-
-            toggleControlsButton.onclick = () => {
-                if (controlsVisible) {
-                    timeDisplay.style.display = "none";
-                    tuaButtons.style.display = "none";
-                    pausePlayButton.style.display = "none";
-                    loopStartEl.style.display = "none";
-                    loopEndEl.style.display = "none";
-                    loopButton.style.display = "none";
-                    clearButton.style.display = "none";
-                    document.querySelector('.time-row').style.display = "none";
-                    document.querySelector('.time-box-group').style.display = "none";
-                    document.querySelector('.button-group').style.display = "none";
-                    toggleControlsButton.textContent = "示";
-                    controlsVisible = false;
-                } else {
-                    timeDisplay.style.display = "inline-block";
-                    tuaButtons.style.display = "flex";
-                    pausePlayButton.style.display = "inline-flex";
-                    loopStartEl.style.display = "inline-block";
-                    loopEndEl.style.display = "inline-block";
-                    loopButton.style.display = "inline-flex";
-                    clearButton.style.display = "inline-flex";
-                    document.querySelector('.time-row').style.display = "flex";
-                    document.querySelector('.time-box-group').style.display = "flex";
-                    document.querySelector('.button-group').style.display = "flex";
-                    toggleControlsButton.textContent = "藏";
-                    controlsVisible = true;
-                }
-                // Respect sentenceP1 restrictions
-                const isSentenceP1 = questionGroups[currentGroupIndex]?.questions[0]?.audioFile === "sentenceP1.mp3";
-                if (isSentenceP1) {
-                    toggleAudioControls(true);
-                }
-            };
-
-            audioPlayer.onpause = audioPlayer.onended = function() {
-                pausePlayButton.textContent = "播";
-            };
-
-            // --- CORE FUNCTIONS ---
-            function renderQuestionGroup() {
-                if (currentGroupIndex >= questionGroups.length) {
-                    showResult();
-                    return;
-                }
-                
-                const group = questionGroups[currentGroupIndex];
-                const start = group.startQuestion;
-                const end = group.endQuestion;
-                const isSentenceP1 = group.questions[0].audioFile === "sentenceP1.mp3";
-
-                // Update instruction box
-                let questionNumberText = (start === end) ? `${start}` : `${start}-${end}`;
-                instructionBox.textContent = `Phần ${group.part} - Câu ${questionNumberText}`;
-                questionNumberDisplay.textContent = questionNumberText;
-                
-                // Render questions
-                questionContainer.innerHTML = '';
-                group.questions.forEach((q, i) => {
-                    const globalIndex = start + i;
-                    const questionCard = document.createElement('div');
-                    questionCard.classList.add('question-card', 'bg-gray-50', 'p-6', 'rounded-xl', 'shadow-sm', 'mb-4');
-                    questionCard.id = `question-card-${globalIndex}`;
-                    questionCard.innerHTML = `
-                        <p class="text-sm text-gray-500 italic mb-2">Chú ý: ${q.notes}</p>
-                        <h4 class="text-lg font-bold mb-4">Câu ${globalIndex}: ${q.question}</h4>
-                        <div id="options-${globalIndex}" class="space-y-3"></div>
-                    `;
-                    questionContainer.appendChild(questionCard);
-
-                    const optionsContainer = document.getElementById(`options-${globalIndex}`);
-                    q.options.forEach(option => {
-                        const optionElement = document.createElement('div');
-                        optionElement.classList.add('question-option', 'p-3', 'bg-white', 'rounded-lg', 'border', 'border-gray-200', 'hover:border-blue-400');
-                        optionElement.textContent = option;
-                        optionsContainer.appendChild(optionElement);
-
-                        if (userAnswers[globalIndex] && userAnswers[globalIndex].selectedOption === option) {
-                            optionElement.classList.add('selected');
-                        }
-
-                        optionElement.addEventListener('click', () => {
-                            handleAnswer(globalIndex, option);
-                        });
-                    });
-                });
-
-                // Disable or enable audio controls based on whether it's sentenceP1
-                toggleAudioControls(isSentenceP1);
-
-                // Play audio and set loop points for the segment
-                const questionData = group.questions[0];
-                audioPlayer.src = questionData.audioFile;
-                audioPlayer.load();
-
-                audioPlayer.onloadedmetadata = () => {
-                    const startTime = questionData.start || 0;
-                    const endTime = questionData.end || audioPlayer.duration;
-
-                    // Reset custom loop points for new question group
-                    clearButton.onclick();
-
-                    loopStartEl.textContent = formatTime(startTime);
-                    loopEndEl.textContent = formatTime(endTime);
-
-                    audioPlayer.currentTime = startTime;
-                    audioPlayer.play().catch(error => {
-                        console.error("Lỗi khi phát âm thanh:", error);
-                    });
-
-                    const stopPlayback = () => {
-                        if (audioPlayer.currentTime >= endTime && !isLooping) {
-                            audioPlayer.pause();
-                            audioPlayer.removeEventListener('timeupdate', stopPlayback);
-                        }
-                    };
-                    audioPlayer.addEventListener('timeupdate', stopPlayback);
-                };
-
-                updateUI();
-            }
-
-            function playAudio(questionData) {
-                audioPlayer.src = questionData.audioFile;
-                audioPlayer.load();
-
-                const isSentenceP1 = questionData.audioFile === "sentenceP1.mp3";
-                toggleAudioControls(isSentenceP1);
-
-                audioPlayer.onloadedmetadata = () => {
-                    const start = isSentenceP1 ? (questionData.start || 0) : (customLoopStart !== null ? customLoopStart : (questionData.start || 0));
-                    const end = isSentenceP1 ? (questionData.end || audioPlayer.duration) : (customLoopEnd !== null ? customLoopEnd : (questionData.end || audioPlayer.duration));
-
-                    loopStartEl.textContent = formatTime(start);
-                    loopEndEl.textContent = formatTime(end);
-
-                    audioPlayer.currentTime = start;
-                    audioPlayer.play().catch(error => {
-                        console.error("Lỗi khi phát âm thanh:", error);
-                    });
-
-                    const stopPlayback = () => {
-                        if (audioPlayer.currentTime >= end && !isLooping) {
-                            audioPlayer.pause();
-                            audioPlayer.removeEventListener('timeupdate', stopPlayback);
-                        }
-                    };
-                    audioPlayer.addEventListener('timeupdate', stopPlayback);
-                };
-            }
-
-            function handleAnswer(questionIndex, selectedOption) {
-                const group = questionGroups[currentGroupIndex];
-                const globalIndicesInGroup = group.questions.map((_, i) => group.startQuestion + i);
-                
-                userAnswers[questionIndex] = {
-                    selectedOption: selectedOption,
-                    correctAnswer: allQuestions[questionIndex - 1].correctAnswer
-                };
-
-                const optionsContainer = document.getElementById(`options-${questionIndex}`);
-                if (optionsContainer) {
-                    Array.from(optionsContainer.children).forEach(optionEl => {
-                        optionEl.classList.remove('selected');
-                    });
-                    const selectedEl = Array.from(optionsContainer.children).find(el => el.textContent === selectedOption);
-                    if (selectedEl) {
-                        selectedEl.classList.add('selected');
-                    }
-                }
-                
-                updateUI();
-
-                if (autoContinueEnabled) {
-                    const allAnsweredInGroup = globalIndicesInGroup.every(idx => userAnswers[idx]);
-                    if (allAnsweredInGroup) {
-                        setTimeout(nextQuestion, 500);
-                    }
-                }
-            }
-
-            function jumpToQuestion(questionNumber) {
-                const targetIndex = questionGroups.findIndex(group => 
-                    questionNumber >= group.startQuestion && questionNumber <= group.endQuestion
-                );
-                if (targetIndex !== -1 && targetIndex !== currentGroupIndex) {
-                    currentGroupIndex = targetIndex;
-                    renderQuestionGroup();
-                }
-            }
-
-            function updateUI() {
-                indicatorList.innerHTML = '';
-                const allQuestionNumbers = Array.from({length: allQuestions.length}, (_, i) => i + 1);
-                const currentGroup = questionGroups[currentGroupIndex];
-                const currentStart = currentGroup ? currentGroup.startQuestion : null;
-                const currentEnd = currentGroup ? currentGroup.endQuestion : null;
-                
-                allQuestionNumbers.forEach(num => {
-                    const isAnswered = userAnswers[num] !== undefined;
-                    const indicatorItem = document.createElement('span');
-                    indicatorItem.textContent = num;
-                    indicatorItem.classList.add('indicator-item', 'py-1', 'px-2', 'rounded-full', 'font-semibold', 'transition-colors', 'duration-200', 'cursor-pointer');
-                    if (isAnswered) {
-                        indicatorItem.classList.add('bg-green-200', 'text-green-800');
-                    } else {
-                        indicatorItem.classList.add('bg-red-200', 'text-red-800');
-                    }
-                    if (currentStart && currentEnd && num >= currentStart && num <= currentEnd) {
-                        indicatorItem.classList.add('active');
-                    }
-                    indicatorItem.addEventListener('click', () => {
-                        jumpToQuestion(num);
-                    });
-                    indicatorList.appendChild(indicatorItem);
-                });
-            }
-
-            function nextQuestion() {
-                if (currentGroupIndex < questionGroups.length - 1) {
-                    currentGroupIndex++;
-                    renderQuestionGroup();
-                } else {
-                    showResult();
-                }
-            }
-
-            function prevQuestion() {
-                if (currentGroupIndex > 0) {
-                    currentGroupIndex--;
-                    renderQuestionGroup();
-                }
-            }
-            
-            function showResult() {
-                const totalQuestions = allQuestions.length;
-                let correctAnswers = 0;
-
-                for (let i = 1; i <= totalQuestions; i++) {
-                    const userAnswer = userAnswers[i];
-                    if (userAnswer && userAnswer.selectedOption === userAnswer.correctAnswer) {
-                        correctAnswers++;
-                    }
-                }
-                
-                questionContainer.innerHTML = `
-                    <div class="result-container text-center p-8 bg-blue-50 rounded-xl shadow-lg">
-                        <h2 class="text-3xl font-bold text-blue-800 mb-4">Kết quả bài thi</h2>
-                        <p class="text-xl text-gray-700 mb-2">Bạn đã hoàn thành bài thi.</p>
-                        <p class="text-2xl font-extrabold text-blue-600">Bạn trả lời đúng ${correctAnswers} trên tổng số ${totalQuestions} câu.</p>
-                        <div class="mt-8 text-left space-y-4">
-                            <h3 class="text-xl font-bold">Báo cáo chi tiết</h3>
-                            <div id="detailed-report" class="space-y-2"></div>
-                        </div>
-                    </div>
-                `;
-                
-                const detailedReport = document.getElementById('detailed-report');
-                for (let i = 1; i <= totalQuestions; i++) {
-                    const questionData = allQuestions[i - 1];
-                    const userAnswer = userAnswers[i];
-                    const isCorrect = userAnswer && userAnswer.selectedOption === questionData.correctAnswer;
-                    const resultText = isCorrect ? "Đúng" : "Sai";
-                    const resultColor = isCorrect ? "text-green-600" : "text-red-600";
-
-                    const reportItem = document.createElement('div');
-                    reportItem.classList.add('p-3', 'bg-white', 'rounded-md', 'shadow-sm');
-                    reportItem.innerHTML = `
-                        <p class="font-semibold">Câu ${i}:</p>
-                        <p class="ml-4">Đáp án của bạn: <strong>${userAnswer ? userAnswer.selectedOption : "Chưa trả lời"}</strong></p>
-                        <p class="ml-4">Đáp án đúng: <strong>${questionData.correctAnswer}</strong></p>
-                        <p class="ml-4 ${resultColor}">Kết quả: <strong>${resultText}</strong></p>
-                    `;
-                    detailedReport.appendChild(reportItem);
-                }
-                
-                document.querySelector('.controls-container').style.display = 'none';
-                document.getElementById('floatingControls').style.display = 'none';
-            }
-
-            // --- EVENT LISTENERS ---
-            prevBtn.addEventListener('click', prevQuestion);
-            nextBtn.addEventListener('click', nextQuestion);
-            replayBtn.addEventListener('click', () => {
-                const currentGroup = questionGroups[currentGroupIndex];
-                clearButton.onclick();
-                playAudio(currentGroup.questions[0]);
-            });
-            autoContinueCheckbox.addEventListener('change', (e) => {
-                autoContinueEnabled = e.target.checked;
-            });
-
-            // Initial render
-            renderQuestionGroup();
+    // Group Part 1 questions (1 question per audio)
+    for (let i = 0; i < sentenceP1.length; i++) {
+        questionGroups.push({
+            questions: [allQuestions[currentGlobalIndex - 1]],
+            startQuestion: currentGlobalIndex,
+            endQuestion: currentGlobalIndex,
+            part: 1
         });
-    </script>
+        currentGlobalIndex++;
+    }
+
+    // Group Part 2 questions
+    for (let i = 0; i < sentenceP2ht.length; i++) {
+        questionGroups.push({
+            questions: [allQuestions[currentGlobalIndex - 1]],
+            startQuestion: currentGlobalIndex,
+            endQuestion: currentGlobalIndex,
+            part: 2
+        });
+        currentGlobalIndex++;
+    }
+    for (let i = 0; i < sentenceP2mt.length; i++) {
+        questionGroups.push({
+            questions: [allQuestions[currentGlobalIndex - 1]],
+            startQuestion: currentGlobalIndex,
+            endQuestion: currentGlobalIndex,
+            part: 2
+        });
+        currentGlobalIndex++;
+    }
+    for (let i = 0; i < sentenceP2bn.length; i += 2) {
+        questionGroups.push({
+            questions: [allQuestions[currentGlobalIndex - 1], allQuestions[currentGlobalIndex]],
+            startQuestion: currentGlobalIndex,
+            endQuestion: currentGlobalIndex + 1,
+            part: 2
+        });
+        currentGlobalIndex += 2;
+    }
+
+    // Group Part 3 questions
+    for (let i = 0; i < sentenceP3ht.length; i += 2) {
+        questionGroups.push({
+            questions: [allQuestions[currentGlobalIndex - 1], allQuestions[currentGlobalIndex]],
+            startQuestion: currentGlobalIndex,
+            endQuestion: currentGlobalIndex + 1,
+            part: 3
+        });
+        currentGlobalIndex += 2;
+    }
+    for (let i = 0; i < sentenceP3bn.length; i += 2) {
+        questionGroups.push({
+            questions: [allQuestions[currentGlobalIndex - 1], allQuestions[currentGlobalIndex]],
+            startQuestion: currentGlobalIndex,
+            endQuestion: currentGlobalIndex + 1,
+            part: 3
+        });
+        currentGlobalIndex += 2;
+    }
+
+    // Group Part 4 questions (12 questions, 2 per audio)
+    for (let i = 0; i < sentenceP4.length; i += 2) {
+        questionGroups.push({
+            questions: [allQuestions[currentGlobalIndex - 1], allQuestions[currentGlobalIndex]],
+            startQuestion: currentGlobalIndex,
+            endQuestion: currentGlobalIndex + 1,
+            part: 4
+        });
+        currentGlobalIndex += 2;
+    }
+
+    // App state
+    let currentGroupIndex = 0;
+    const userAnswers = {};
+    let autoContinueEnabled = false;
+
+    // --- UI ELEMENTS ---
+    const questionContainer = document.getElementById('question-container');
+    const audioPlayer = document.getElementById('audioPlayer');
+    const instructionBox = document.getElementById('current-section');
+    const indicatorList = document.getElementById('indicator-list');
+    const questionNumberDisplay = document.getElementById('questionNumberDisplay');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const replayBtn = document.getElementById('replayBtn');
+    const autoContinueCheckbox = document.getElementById('autoContinue');
+
+    // Audio Controls Elements
+    const timeDisplay = document.getElementById("timeDisplay");
+    const loopStartEl = document.getElementById("loopStart");
+    const loopEndEl = document.getElementById("loopEnd");
+    const loopButton = document.getElementById("loopButton");
+    const clearButton = document.getElementById("clearButton");
+    const rewind5sButton = document.getElementById("rewind5sButton");
+    const rewind1sButton = document.getElementById("rewind1sButton");
+    const forward1sButton = document.getElementById("forward1sButton");
+    const forward5sButton = document.getElementById("forward5sButton");
+    const pausePlayButton = document.getElementById("pausePlayButton");
+    const toggleControlsButton = document.getElementById("toggleControlsButton");
+    const tuaButtons = document.querySelector(".tua-buttons");
+
+    // Audio Control Variables
+    let customLoopStart = null;
+    let customLoopEnd = null;
+    let clickCount = 0;
+    let isLooping = false;
+    let controlsVisible = true;
+
+    // --- AUDIO CONTROL FUNCTIONS ---
+    function toggleAudioControls(disable) {
+        const elements = [
+            { element: rewind5sButton, container: tuaButtons },
+            { element: rewind1sButton, container: tuaButtons },
+            { element: forward1sButton, container: tuaButtons },
+            { element: forward5sButton, container: tuaButtons },
+            { element: pausePlayButton, container: document.querySelector('.action-buttons') },
+            { element: loopButton, container: document.querySelector('.button-group') },
+            { element: clearButton, container: document.querySelector('.button-group') },
+            { element: timeDisplay, container: document.querySelector('.time-row') },
+            { element: loopStartEl, container: document.querySelector('.time-box-group') },
+            { element: loopEndEl, container: document.querySelector('.time-box-group') }
+        ];
+        elements.forEach(({ element, container }) => {
+            if (disable) {
+                element.classList.add('disabled');
+                element.style.display = 'none';
+                if (container && !container.querySelectorAll('.control-button:not(.disabled), .time-box:not(.disabled), p#timeDisplay:not(.disabled)').length) {
+                    container.style.display = 'none';
+                }
+            } else {
+                element.classList.remove('disabled');
+                element.style.display = '';
+                if (container) {
+                    container.style.display = '';
+                }
+            }
+        });
+        toggleControlsButton.classList.remove('disabled');
+        toggleControlsButton.style.display = '';
+        toggleControlsButton.disabled = false;
+    }
+
+    function formatTime(seconds) {
+        if (seconds === undefined || seconds === null || isNaN(seconds)) {
+            return "--:--";
+        }
+        const minutes = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    function updateTimeDisplay() {
+        timeDisplay.textContent = formatTime(audioPlayer.currentTime);
+    }
+
+    const updateInterval = setInterval(updateTimeDisplay, 1000);
+
+    timeDisplay.onclick = () => {
+        if (audioPlayer.paused) {
+            clickCount++;
+            if (clickCount === 1) {
+                customLoopStart = audioPlayer.currentTime;
+                loopStartEl.textContent = formatTime(customLoopStart);
+            } else if (clickCount === 2) {
+                customLoopEnd = audioPlayer.currentTime;
+                if (customLoopEnd <= customLoopStart) {
+                    customLoopEnd = null;
+                    loopEndEl.textContent = "--:--";
+                } else {
+                    loopEndEl.textContent = formatTime(customLoopEnd);
+                }
+                clickCount = 0;
+            }
+        }
+    };
+
+    audioPlayer.ontimeupdate = function() {
+        updateTimeDisplay();
+        if (isLooping && customLoopStart !== null && customLoopEnd !== null) {
+            if (audioPlayer.currentTime >= customLoopEnd) {
+                audioPlayer.currentTime = customLoopStart;
+                audioPlayer.play();
+            }
+        }
+    };
+
+    audioPlayer.onerror = function() {
+        console.error("Lỗi tải file âm thanh:", audioPlayer.src);
+        alert("Không thể tải file âm thanh: " + audioPlayer.src);
+    };
+
+    rewind5sButton.onclick = () => {
+        if (!isLooping) {
+            audioPlayer.currentTime = Math.max(0, audioPlayer.currentTime - 5);
+            updateTimeDisplay();
+        }
+    };
+    rewind1sButton.onclick = () => {
+        if (!isLooping) {
+            audioPlayer.currentTime = Math.max(0, audioPlayer.currentTime - 1);
+            updateTimeDisplay();
+        }
+    };
+    forward1sButton.onclick = () => {
+        if (!isLooping) {
+            audioPlayer.currentTime = Math.min(audioPlayer.duration || Infinity, audioPlayer.currentTime + 1);
+            updateTimeDisplay();
+        }
+    };
+    forward5sButton.onclick = () => {
+        if (!isLooping) {
+            audioPlayer.currentTime = Math.min(audioPlayer.duration || Infinity, audioPlayer.currentTime + 5);
+            updateTimeDisplay();
+        }
+    };
+
+    pausePlayButton.onclick = () => {
+        if (audioPlayer.paused) {
+            audioPlayer.play().catch(error => {
+                console.error("Lỗi khi phát âm thanh:", error);
+            });
+            pausePlayButton.textContent = "停";
+        } else {
+            audioPlayer.pause();
+            pausePlayButton.textContent = "播";
+        }
+    };
+
+    loopButton.onclick = () => {
+        if (customLoopStart !== null && customLoopEnd !== null) {
+            audioPlayer.currentTime = customLoopStart;
+            audioPlayer.play().catch(error => {
+                console.error("Lỗi khi phát âm thanh trong chế độ lặp:", error);
+            });
+            isLooping = true;
+        }
+    };
+
+    clearButton.onclick = () => {
+        customLoopStart = null;
+        customLoopEnd = null;
+        loopStartEl.textContent = "--:--";
+        loopEndEl.textContent = "--:--";
+        clickCount = 0;
+        isLooping = false;
+        rewind5sButton.disabled = false;
+        rewind1sButton.disabled = false;
+        forward1sButton.disabled = false;
+        forward5sButton.disabled = false;
+    };
+
+    toggleControlsButton.onclick = () => {
+        if (controlsVisible) {
+            timeDisplay.style.display = "none";
+            tuaButtons.style.display = "none";
+            pausePlayButton.style.display = "none";
+            loopStartEl.style.display = "none";
+            loopEndEl.style.display = "none";
+            loopButton.style.display = "none";
+            clearButton.style.display = "none";
+            document.querySelector('.time-row').style.display = "none";
+            document.querySelector('.time-box-group').style.display = "none";
+            document.querySelector('.button-group').style.display = "none";
+            toggleControlsButton.textContent = "示";
+            controlsVisible = false;
+        } else {
+            timeDisplay.style.display = "inline-block";
+            tuaButtons.style.display = "flex";
+            pausePlayButton.style.display = "inline-flex";
+            loopStartEl.style.display = "inline-block";
+            loopEndEl.style.display = "inline-block";
+            loopButton.style.display = "inline-flex";
+            clearButton.style.display = "inline-flex";
+            document.querySelector('.time-row').style.display = "flex";
+            document.querySelector('.time-box-group').style.display = "flex";
+            document.querySelector('.button-group').style.display = "flex";
+            toggleControlsButton.textContent = "藏";
+            controlsVisible = true;
+        }
+        const isSentenceP1 = questionGroups[currentGroupIndex]?.questions[0]?.audioFile === "sentenceP1.mp3";
+        if (isSentenceP1) {
+            toggleAudioControls(true);
+        }
+    };
+
+    audioPlayer.onpause = audioPlayer.onended = function() {
+        pausePlayButton.textContent = "播";
+    };
+
+    // --- CORE FUNCTIONS ---
+    function renderQuestionGroup() {
+        if (currentGroupIndex >= questionGroups.length) {
+            showResult();
+            return;
+        }
+
+        const group = questionGroups[currentGroupIndex];
+        const start = group.startQuestion;
+        const end = group.endQuestion;
+        const isSentenceP1 = group.questions[0].audioFile === "sentenceP1.mp3";
+
+        // Update instruction box
+        let questionNumberText = (start === end) ? `${start}` : `${start}-${end}`;
+        instructionBox.textContent = `Phần ${group.part} - Câu ${questionNumberText}`;
+        questionNumberDisplay.textContent = questionNumberText;
+
+        // Render questions
+        questionContainer.innerHTML = '';
+        group.questions.forEach((q, i) => {
+            const globalIndex = start + i;
+            const questionCard = document.createElement('div');
+            questionCard.classList.add('question-card', 'bg-gray-50', 'p-6', 'rounded-xl', 'shadow-sm', 'mb-4');
+            questionCard.id = `question-card-${globalIndex}`;
+            questionCard.innerHTML = `
+                <p class="text-sm text-gray-500 italic mb-2">Chú ý: ${q.notes}</p>
+                <h4 class="text-lg font-bold mb-4">Câu ${globalIndex}: ${q.question}</h4>
+                <div id="options-${globalIndex}" class="space-y-3"></div>
+            `;
+            questionContainer.appendChild(questionCard);
+
+            const optionsContainer = document.getElementById(`options-${globalIndex}`);
+
+            // --- NEW: Lấy trật tự đáp án đã xáo (nhất quán trong phiên) ---
+            const shuffledOptions = getShuffledOptions(globalIndex, q.options);
+
+            shuffledOptions.forEach(option => {
+                const optionElement = document.createElement('div');
+                optionElement.classList.add('question-option', 'p-3', 'bg-white', 'rounded-lg', 'border', 'border-gray-200', 'hover:border-blue-400');
+                optionElement.textContent = option;
+                optionsContainer.appendChild(optionElement);
+
+                if (userAnswers[globalIndex] && userAnswers[globalIndex].selectedOption === option) {
+                    optionElement.classList.add('selected');
+                }
+
+                optionElement.addEventListener('click', () => {
+                    handleAnswer(globalIndex, option);
+                });
+            });
+        });
+
+        // Disable/enable audio controls
+        toggleAudioControls(isSentenceP1);
+        if (!controlsVisible) {
+            document.querySelector('.time-row').style.display = "none";
+            document.querySelector('.time-box-group').style.display = "none";
+            document.querySelector('.button-group').style.display = "none";
+            tuaButtons.style.display = "none";
+            pausePlayButton.style.display = "none";
+            toggleControlsButton.textContent = "示";
+        }
+
+        // Play audio and set loop points
+        const questionData = group.questions[0];
+        audioPlayer.src = questionData.audioFile;
+        audioPlayer.load();
+
+        audioPlayer.onloadedmetadata = () => {
+            const startTime = questionData.start || 0;
+            const endTime = questionData.end || audioPlayer.duration;
+
+            // Reset custom loop points for new question group
+            clearButton.onclick();
+
+            loopStartEl.textContent = formatTime(startTime);
+            loopEndEl.textContent = formatTime(endTime);
+
+            audioPlayer.currentTime = startTime;
+            audioPlayer.play().catch(error => {
+                console.error("Lỗi khi phát âm thanh:", error);
+            });
+
+            const stopPlayback = () => {
+                if (audioPlayer.currentTime >= endTime && !isLooping) {
+                    audioPlayer.pause();
+                    audioPlayer.removeEventListener('timeupdate', stopPlayback);
+                }
+            };
+            audioPlayer.addEventListener('timeupdate', stopPlayback);
+        };
+
+        updateUI();
+    }
+
+    function playAudio(questionData) {
+        audioPlayer.src = questionData.audioFile;
+        audioPlayer.load();
+
+        const isSentenceP1 = questionData.audioFile === "sentenceP1.mp3";
+        toggleAudioControls(isSentenceP1);
+
+        audioPlayer.onloadedmetadata = () => {
+            const start = isSentenceP1 ? (questionData.start || 0) : (customLoopStart !== null ? customLoopStart : (questionData.start || 0));
+            const end = isSentenceP1 ? (questionData.end || audioPlayer.duration) : (customLoopEnd !== null ? customLoopEnd : (questionData.end || audioPlayer.duration));
+
+            loopStartEl.textContent = formatTime(start);
+            loopEndEl.textContent = formatTime(end);
+
+            audioPlayer.currentTime = start;
+            audioPlayer.play().catch(error => {
+                console.error("Lỗi khi phát âm thanh:", error);
+            });
+
+            const stopPlayback = () => {
+                if (audioPlayer.currentTime >= end && !isLooping) {
+                    audioPlayer.pause();
+                    audioPlayer.removeEventListener('timeupdate', stopPlayback);
+                }
+            };
+            audioPlayer.addEventListener('timeupdate', stopPlayback);
+        };
+    }
+
+    function handleAnswer(questionIndex, selectedOption) {
+        const group = questionGroups[currentGroupIndex];
+        const globalIndicesInGroup = group.questions.map((_, i) => group.startQuestion + i);
+
+        userAnswers[questionIndex] = {
+            selectedOption: selectedOption,
+            correctAnswer: allQuestions[questionIndex - 1].correctAnswer
+        };
+
+        const optionsContainer = document.getElementById(`options-${questionIndex}`);
+        if (optionsContainer) {
+            Array.from(optionsContainer.children).forEach(optionEl => {
+                optionEl.classList.remove('selected');
+            });
+            const selectedEl = Array.from(optionsContainer.children).find(el => el.textContent === selectedOption);
+            if (selectedEl) {
+                selectedEl.classList.add('selected');
+            }
+        }
+
+        updateUI();
+
+        if (autoContinueEnabled) {
+            const allAnsweredInGroup = globalIndicesInGroup.every(idx => userAnswers[idx]);
+            if (allAnsweredInGroup) {
+                setTimeout(nextQuestion, 500);
+            }
+        }
+    }
+
+    function jumpToQuestion(questionNumber) {
+        const targetIndex = questionGroups.findIndex(group =>
+            questionNumber >= group.startQuestion && questionNumber <= group.endQuestion
+        );
+        if (targetIndex !== -1 && targetIndex !== currentGroupIndex) {
+            currentGroupIndex = targetIndex;
+            renderQuestionGroup();
+        }
+    }
+
+    function updateUI() {
+        indicatorList.innerHTML = '';
+        const allQuestionNumbers = Array.from({length: allQuestions.length}, (_, i) => i + 1);
+        const currentGroup = questionGroups[currentGroupIndex];
+        const currentStart = currentGroup ? currentGroup.startQuestion : null;
+        const currentEnd = currentGroup ? currentGroup.endQuestion : null;
+
+        allQuestionNumbers.forEach(num => {
+            const isAnswered = userAnswers[num] !== undefined;
+            const indicatorItem = document.createElement('span');
+            indicatorItem.textContent = num;
+            indicatorItem.classList.add('indicator-item', 'py-1', 'px-2', 'rounded-full', 'font-semibold', 'transition-colors', 'duration-200', 'cursor-pointer');
+            if (isAnswered) {
+                indicatorItem.classList.add('bg-green-200', 'text-green-800');
+            } else {
+                indicatorItem.classList.add('bg-red-200', 'text-red-800');
+            }
+            if (currentStart && currentEnd && num >= currentStart && num <= currentEnd) {
+                indicatorItem.classList.add('active');
+            }
+            indicatorItem.addEventListener('click', () => {
+                jumpToQuestion(num);
+            });
+            indicatorList.appendChild(indicatorItem);
+        });
+    }
+
+    function nextQuestion() {
+        if (currentGroupIndex < questionGroups.length - 1) {
+            currentGroupIndex++;
+            renderQuestionGroup();
+        } else {
+            showResult();
+        }
+    }
+
+    function prevQuestion() {
+        if (currentGroupIndex > 0) {
+            currentGroupIndex--;
+            renderQuestionGroup();
+        }
+    }
+
+    function showResult() {
+        const totalQuestions = allQuestions.length;
+        let correctAnswers = 0;
+
+        for (let i = 1; i <= totalQuestions; i++) {
+            const userAnswer = userAnswers[i];
+            if (userAnswer && userAnswer.selectedOption === userAnswer.correctAnswer) {
+                correctAnswers++;
+            }
+        }
+
+        questionContainer.innerHTML = `
+            <div class="result-container text-center p-8 bg-blue-50 rounded-xl shadow-lg">
+                <h2 class="text-3xl font-bold text-blue-800 mb-4">Kết quả bài thi</h2>
+                <p class="text-xl text-gray-700 mb-2">Bạn đã hoàn thành bài thi.</p>
+                <p class="text-2xl font-extrabold text-blue-600">Bạn trả lời đúng ${correctAnswers} trên tổng số ${totalQuestions} câu.</p>
+                <div class="mt-8 text-left space-y-4">
+                    <h3 class="text-xl font-bold">Báo cáo chi tiết</h3>
+                    <div id="detailed-report" class="space-y-2"></div>
+                </div>
+            </div>
+        `;
+
+        const detailedReport = document.getElementById('detailed-report');
+        for (let i = 1; i <= totalQuestions; i++) {
+            const questionData = allQuestions[i - 1];
+            const userAnswer = userAnswers[i];
+            const isCorrect = userAnswer && userAnswer.selectedOption === questionData.correctAnswer;
+            const resultText = isCorrect ? "Đúng" : "Sai";
+            const resultColor = isCorrect ? "text-green-600" : "text-red-600";
+
+            const reportItem = document.createElement('div');
+            reportItem.classList.add('p-3', 'bg-white', 'rounded-md', 'shadow-sm');
+            reportItem.innerHTML = `
+                <p class="font-semibold">Câu ${i}:</p>
+                <p class="ml-4">Đáp án của bạn: <strong>${userAnswer ? userAnswer.selectedOption : "Chưa trả lời"}</strong></p>
+                <p class="ml-4">Đáp án đúng: <strong>${questionData.correctAnswer}</strong></p>
+                <p class="ml-4 ${resultColor}">Kết quả: <strong>${resultText}</strong></p>
+            `;
+            detailedReport.appendChild(reportItem);
+        }
+
+        document.querySelector('.controls-container').style.display = 'none';
+        document.getElementById('floatingControls').style.display = 'none';
+    }
+
+    // --- EVENT LISTENERS ---
+    prevBtn.addEventListener('click', prevQuestion);
+    nextBtn.addEventListener('click', nextQuestion);
+    replayBtn.addEventListener('click', () => {
+        const currentGroup = questionGroups[currentGroupIndex];
+        clearButton.onclick();
+        playAudio(currentGroup.questions[0]);
+    });
+    autoContinueCheckbox.addEventListener('change', (e) => {
+        autoContinueEnabled = e.target.checked;
+    });
+
+    // Initial render
+    renderQuestionGroup();
+});
+</script>
 </body>
 </html>
