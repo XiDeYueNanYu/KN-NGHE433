@@ -1336,14 +1336,6 @@
 
                 // Disable or enable audio controls based on whether it's sentenceP1
                 toggleAudioControls(isSentenceP1);
-				if (!controlsVisible) {
-					document.querySelector('.time-row').style.display = "none";
-					document.querySelector('.time-box-group').style.display = "none";
-					document.querySelector('.button-group').style.display = "none";
-					tuaButtons.style.display = "none";
-					pausePlayButton.style.display = "none";
-					toggleControlsButton.textContent = "示";
-				}
 
                 // Play audio and set loop points for the segment
                 const questionData = group.questions[0];
@@ -1366,55 +1358,45 @@
                     });
 
                     const stopPlayback = () => {
-    if (!isLooping && audioPlayer.currentTime >= endTime - 0.2) {
-        audioPlayer.pause();
-        audioPlayer.currentTime = endTime; // đảm bảo dừng đúng tại điểm kết thúc
-        audioPlayer.removeEventListener('timeupdate', stopPlayback);
-    }
-};
-audioPlayer.addEventListener('timeupdate', stopPlayback);
-
-// Đồng thời bắt thêm sự kiện ended để tránh cắt ngang
-audioPlayer.onended = () => {
-    if (!isLooping) {
-        pausePlayButton.textContent = "播";
-    }
-};
-
+                        if (audioPlayer.currentTime >= endTime && !isLooping) {
+                            audioPlayer.pause();
+                            audioPlayer.removeEventListener('timeupdate', stopPlayback);
+                        }
+                    };
+                    audioPlayer.addEventListener('timeupdate', stopPlayback);
                 };
 
                 updateUI();
             }
 
-            function playAudio(startTime, endTime, isLooping = false) {
-    // Cập nhật lại trạng thái play/pause
-    pausePlayButton.textContent = "停";
+            function playAudio(questionData) {
+                audioPlayer.src = questionData.audioFile;
+                audioPlayer.load();
 
-    audioPlayer.currentTime = startTime;
-    audioPlayer.play();
+                const isSentenceP1 = questionData.audioFile === "sentenceP1.mp3";
+                toggleAudioControls(isSentenceP1);
 
-    // Xóa listener cũ để tránh bị gắn nhiều lần
-    const stopPlayback = () => {
-        // Nới lỏng điều kiện dừng để tránh pause sớm
-        if (!isLooping && audioPlayer.currentTime >= endTime - 0.05) {
-            audioPlayer.pause();
-            audioPlayer.currentTime = endTime;
-            audioPlayer.removeEventListener('timeupdate', stopPlayback);
-            pausePlayButton.textContent = "播";
-        }
-    };
+                audioPlayer.onloadedmetadata = () => {
+                    const start = isSentenceP1 ? (questionData.start || 0) : (customLoopStart !== null ? customLoopStart : (questionData.start || 0));
+                    const end = isSentenceP1 ? (questionData.end || audioPlayer.duration) : (customLoopEnd !== null ? customLoopEnd : (questionData.end || audioPlayer.duration));
 
-    audioPlayer.removeEventListener('timeupdate', stopPlayback);
-    audioPlayer.addEventListener('timeupdate', stopPlayback);
+                    loopStartEl.textContent = formatTime(start);
+                    loopEndEl.textContent = formatTime(end);
 
-    // Bắt sự kiện ended của audio để đảm bảo không bị cắt ngang
-    audioPlayer.onended = () => {
-        if (!isLooping) {
-            pausePlayButton.textContent = "播";
-        }
-    };
-}
+                    audioPlayer.currentTime = start;
+                    audioPlayer.play().catch(error => {
+                        console.error("Lỗi khi phát âm thanh:", error);
+                    });
 
+                    const stopPlayback = () => {
+                        if (audioPlayer.currentTime >= end && !isLooping) {
+                            audioPlayer.pause();
+                            audioPlayer.removeEventListener('timeupdate', stopPlayback);
+                        }
+                    };
+                    audioPlayer.addEventListener('timeupdate', stopPlayback);
+                };
+            }
 
             function handleAnswer(questionIndex, selectedOption) {
                 const group = questionGroups[currentGroupIndex];
